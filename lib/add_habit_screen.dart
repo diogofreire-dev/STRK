@@ -54,10 +54,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
         elevation: 0,
         leading: GestureDetector(
           onTap: () => Navigator.pop(context),
-          child: Icon(
-            Icons.close,
-            color: Colors.white.withValues(alpha:0.4),
-          ),
+          child: Icon(Icons.close, color: Colors.white.withValues(alpha: 0.4)),
         ),
         title: const Text(
           'Novo hábito',
@@ -87,7 +84,10 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                   activeThumbColor: const Color(0xFFC8FF00),
                 ),
                 const SizedBox(width: 8),
-                const Text('Lembrete diário', style: TextStyle(color: Color(0xFFE8E8E8))),
+                const Text(
+                  'Lembrete diário',
+                  style: TextStyle(color: Color(0xFFE8E8E8)),
+                ),
                 const Spacer(),
                 if (_reminderEnabled)
                   GestureDetector(
@@ -98,7 +98,10 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                       );
                       if (t != null) setState(() => _reminderTime = t);
                     },
-                    child: Text(_reminderTime.format(context), style: const TextStyle(color: Color(0xFFE8E8E8))),
+                    child: Text(
+                      _reminderTime.format(context),
+                      style: const TextStyle(color: Color(0xFFE8E8E8)),
+                    ),
                   ),
               ],
             ),
@@ -121,7 +124,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
       style: TextStyle(
         fontSize: 11,
         fontWeight: FontWeight.w600,
-        color: Colors.white.withValues(alpha:0.3),
+        color: Colors.white.withValues(alpha: 0.3),
         letterSpacing: 0.8,
       ),
     );
@@ -140,7 +143,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
       decoration: InputDecoration(
         hintText: 'Ex: Beber água, Exercício...',
         hintStyle: TextStyle(
-          color: Colors.white.withValues(alpha:0.2),
+          color: Colors.white.withValues(alpha: 0.2),
           fontSize: 16,
           fontWeight: FontWeight.w400,
         ),
@@ -152,10 +155,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(
-            color: Color(0xFFC8FF00),
-            width: 1,
-          ),
+          borderSide: const BorderSide(color: Color(0xFFC8FF00), width: 1),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
@@ -184,7 +184,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
             duration: const Duration(milliseconds: 200),
             decoration: BoxDecoration(
               color: isSelected
-                  ? const Color(0xFFC8FF00).withValues(alpha:0.15)
+                  ? const Color(0xFFC8FF00).withValues(alpha: 0.15)
                   : const Color(0xFF1A1A1A),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
@@ -199,7 +199,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
               size: 20,
               color: isSelected
                   ? const Color(0xFFC8FF00)
-                  : Colors.white.withValues(alpha:0.3),
+                  : Colors.white.withValues(alpha: 0.3),
             ),
           ),
         );

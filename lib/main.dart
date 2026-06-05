@@ -255,14 +255,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       if (reminderEnabled)
                         GestureDetector(
                           onTap: () async {
-                              final t = await showTimePicker(
-                                context: context,
-                                initialTime: reminderTime,
-                              );
-                              if (t != null) {
-                                setStateDialog(() => reminderTime = t);
-                              }
-                            },
+                            final t = await showTimePicker(
+                              context: context,
+                              initialTime: reminderTime,
+                            );
+                            if (t != null) {
+                              setStateDialog(() => reminderTime = t);
+                            }
+                          },
                           child: Text(
                             reminderTime.format(context),
                             style: const TextStyle(color: Color(0xFFE8E8E8)),
