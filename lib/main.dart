@@ -162,6 +162,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _showEditDialog(Habit habit) {
     final controller = TextEditingController(text: habit.name);
+    bool reminderEnabled = habit.reminderEnabled;
+    TimeOfDay reminderTime = TimeOfDay(
+      hour: habit.reminderHour ?? 8,
+      minute: habit.reminderMinute ?? 0,
+    );
+
     showDialog(
       context: context,
       builder: (_) => Dialog(
@@ -169,104 +175,163 @@ class _HomeScreenState extends State<HomeScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Editar hábito',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFFE8E8E8),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: controller,
-                autofocus: true,
-                style: const TextStyle(
-                  color: Color(0xFFE8E8E8),
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
-                cursorColor: const Color(0xFFC8FF00),
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: const Color(0xFF2C2C2C),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+          child: StatefulBuilder(builder: (context, setStateDialog) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Editar hábito',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFFE8E8E8),
                   ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      color: Color(0xFFC8FF00),
-                      width: 1,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: controller,
+                  autofocus: true,
+                  style: const TextStyle(
+                    color: Color(0xFFE8E8E8),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  cursorColor: const Color(0xFFC8FF00),
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: const Color(0xFF2C2C2C),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Color(0xFFC8FF00),
+                        width: 1,
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
                     ),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
-                  ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF2C2C2C),
-                          borderRadius: BorderRadius.circular(12),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Switch(
+                      value: reminderEnabled,
+                      onChanged: (v) => setStateDialog(() => reminderEnabled = v),
+                      activeThumbImage: null,
+                      activeThumbColor: const Color(0xFFC8FF00),
+                    ),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Lembrete diário',
+                      style: TextStyle(color: Color(0xFFE8E8E8)),
+                    ),
+                    const Spacer(),
+                    if (reminderEnabled)
+                      GestureDetector(
+                        onTap: () async {
+                          final t = await showTimePicker(
+                            context: context,
+                            initialTime: reminderTime,
+                          );
+                          if (t != null) setStateDialog(() => reminderTime = t);
+                        },
+                        child: Text(
+                          reminderTime.format(context),
+                          style: const TextStyle(color: Color(0xFFE8E8E8)),
                         ),
-                        child: const Text(
-                          'Cancelar',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF888888),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2C2C2C),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Text(
+                            'Cancelar',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF888888),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        if (controller.text.trim().isNotEmpty) {
-                          setState(() => habit.name = controller.text.trim());
-                          HabitService.saveHabit(habit);
-                          Navigator.pop(context);
-                        }
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFC8FF00),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Text(
-                          'Guardar',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF0D0D0D),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          if (controller.text.trim().isNotEmpty) {
+                            setState(() => habit.name = controller.text.trim());
+                            // update reminder fields
+                            habit.reminderEnabled = reminderEnabled;
+                            if (reminderEnabled) {
+                              habit.reminderHour = reminderTime.hour;
+                              habit.reminderMinute = reminderTime.minute;
+                            } else {
+                              habit.reminderHour = null;
+                              habit.reminderMinute = null;
+                            }
+                            HabitService.saveHabit(habit);
+
+                            // schedule or cancel notification
+                            if (habit.reminderEnabled &&
+                                habit.reminderHour != null &&
+                                habit.reminderMinute != null) {
+                              NotificationsService.scheduleDailyReminder(
+                                habit.id,
+                                habit.reminderHour!,
+                                habit.reminderMinute!,
+                                'Lembra-te de: ${habit.name}',
+                                'Não te esqueças do teu hábito diário.',
+                              );
+                            } else {
+                              NotificationsService.cancelReminder(habit.id);
+                            }
+
+                            Navigator.pop(context);
+                            setState(() {});
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFC8FF00),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Text(
+                            'Guardar',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF0D0D0D),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+                  ],
+                ),
+              ],
+            );
+          }),
         ),
       ),
     );
