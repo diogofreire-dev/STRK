@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -68,9 +70,22 @@ class _AuthScreenState extends State<AuthScreen> {
       _isLoading = true;
       _error = null;
     });
+
     try {
-      final GoogleAuthProvider googleProvider = GoogleAuthProvider();
-      await FirebaseAuth.instance.signInWithPopup(googleProvider);
+      if (kIsWeb) {
+        final googleProvider = GoogleAuthProvider();
+        await FirebaseAuth.instance.signInWithPopup(googleProvider);
+      } else {
+        final googleUser = await GoogleSignIn.instance.authenticate();
+        final idToken = googleUser.authentication.idToken;
+        if (idToken == null) {
+          setState(() => _error = 'Não foi possível autenticar com o Google.');
+          return;
+        }
+
+        final credential = GoogleAuthProvider.credential(idToken: idToken);
+        await FirebaseAuth.instance.signInWithCredential(credential);
+      }
     } on FirebaseAuthException catch (e) {
       setState(() => _error = _friendlyError(e.code));
     } finally {
