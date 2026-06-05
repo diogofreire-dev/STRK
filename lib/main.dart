@@ -290,6 +290,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (newHabit != null) {
                   setState(() => habits.add(newHabit));
                   HabitService.saveHabit(newHabit);
+                  if (newHabit.reminderEnabled &&
+                      newHabit.reminderHour != null &&
+                      newHabit.reminderMinute != null) {
+                    NotificationsService.scheduleDailyReminder(
+                      newHabit.id,
+                      newHabit.reminderHour!,
+                      newHabit.reminderMinute!,
+                      'Lembra-te de: ${newHabit.name}',
+                      'Não te esqueças do teu hábito diário.',
+                    );
+                  }
                 }
               },
               child: const Icon(Icons.add, size: 28),
@@ -578,6 +589,7 @@ class _HomeScreenState extends State<HomeScreen> {
       direction: DismissDirection.endToStart,
       onDismissed: (_) {
         HabitService.deleteHabit(habit.id);
+        NotificationsService.cancelReminder(habit.id);
         setState(() => habits.remove(habit));
       },
       background: Container(

@@ -46,6 +46,9 @@ class HabitService {
       'icon': _iconToKey(habit.icon),
       'completedToday': habit.completedToday,
       'streak': habit.streak,
+      'reminderEnabled': habit.reminderEnabled,
+      'reminderHour': habit.reminderHour,
+      'reminderMinute': habit.reminderMinute,
       'lastUpdated': FieldValue.serverTimestamp(),
     });
   }
@@ -64,6 +67,9 @@ class HabitService {
         icon: _keyToIcon(data['icon']),
         completedToday: data['completedToday'] ?? false,
         streak: data['streak'] ?? 0,
+        reminderEnabled: data['reminderEnabled'] ?? false,
+        reminderHour: data['reminderHour'] as int?,
+        reminderMinute: data['reminderMinute'] as int?,
       );
     }).toList();
   }
@@ -77,6 +83,9 @@ class HabitService {
         'icon': _iconToKey(habit.icon),
         'completedToday': habit.completedToday,
         'streak': habit.streak,
+        'reminderEnabled': habit.reminderEnabled,
+        'reminderHour': habit.reminderHour,
+        'reminderMinute': habit.reminderMinute,
         'lastUpdated': FieldValue.serverTimestamp(),
       });
     }

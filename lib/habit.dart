@@ -6,6 +6,9 @@ class Habit {
   IconData icon;
   bool completedToday;
   int streak;
+  bool reminderEnabled;
+  int? reminderHour;
+  int? reminderMinute;
 
   Habit({
     required this.id,
@@ -13,5 +16,8 @@ class Habit {
     required this.icon,
     this.completedToday = false,
     this.streak = 0,
+    this.reminderEnabled = false,
+    this.reminderHour,
+    this.reminderMinute,
   });
 }

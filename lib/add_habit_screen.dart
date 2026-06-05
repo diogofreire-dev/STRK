@@ -11,6 +11,8 @@ class AddHabitScreen extends StatefulWidget {
 class _AddHabitScreenState extends State<AddHabitScreen> {
   final TextEditingController _nameController = TextEditingController();
   IconData _selectedIcon = Icons.star_outline_rounded;
+  bool _reminderEnabled = false;
+  TimeOfDay _reminderTime = const TimeOfDay(hour: 8, minute: 0);
 
   final List<Map<String, dynamic>> _icons = [
     {'icon': Icons.water_drop_outlined, 'label': 'Água'},
@@ -35,6 +37,9 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
       name: _nameController.text.trim(),
       icon: _selectedIcon,
       streak: 0,
+      reminderEnabled: _reminderEnabled,
+      reminderHour: _reminderEnabled ? _reminderTime.hour : null,
+      reminderMinute: _reminderEnabled ? _reminderTime.minute : null,
     );
 
     Navigator.pop(context, newHabit);
@@ -72,6 +77,31 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
             _buildLabel('Nome'),
             const SizedBox(height: 10),
             _buildNameField(),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Switch(
+                  value: _reminderEnabled,
+                  onChanged: (v) => setState(() => _reminderEnabled = v),
+                  activeThumbImage: null,
+                  activeThumbColor: const Color(0xFFC8FF00),
+                ),
+                const SizedBox(width: 8),
+                const Text('Lembrete diário', style: TextStyle(color: Color(0xFFE8E8E8))),
+                const Spacer(),
+                if (_reminderEnabled)
+                  GestureDetector(
+                    onTap: () async {
+                      final t = await showTimePicker(
+                        context: context,
+                        initialTime: _reminderTime,
+                      );
+                      if (t != null) setState(() => _reminderTime = t);
+                    },
+                    child: Text(_reminderTime.format(context), style: const TextStyle(color: Color(0xFFE8E8E8))),
+                  ),
+              ],
+            ),
             const SizedBox(height: 28),
             _buildLabel('Ícone'),
             const SizedBox(height: 10),
