@@ -39,31 +39,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final file = await ProfileService.pickProfilePhoto(source: source);
     if (file == null) return;
 
-    setState(() {
-      _isUploading = true;
-    });
+    setState(() => _isUploading = true);
 
     try {
       final url = await ProfileService.uploadProfilePhoto(file);
       await ProfileService.saveProfilePhotoUrl(url);
+
+      // Força atualização imediata com a URL nova
       if (mounted) {
         setState(() {
           _photoUrl = url;
+          _isUploading = false;
         });
       }
-      await _refreshUser();
-      _showMessage('Foto atualizada com sucesso.');
-    } catch (_) {
+    } catch (e) {
       _showMessage(
         'Não foi possível carregar a foto. Tenta novamente.',
         isError: true,
       );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isUploading = false;
-        });
-      }
+      if (mounted) setState(() => _isUploading = false);
     }
   }
 
