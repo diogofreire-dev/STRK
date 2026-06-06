@@ -14,11 +14,16 @@ import 'auth_screen.dart';
 import 'profile_screen.dart';
 import 'stats_screen.dart';
 import 'calendar_screen.dart';
+import 'package:flutter/foundation.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await GoogleSignIn.instance.initialize();
+
+  if (!kIsWeb) {
+    await GoogleSignIn.instance.initialize();
+  }
+
   await NotificationsService.init();
   runApp(const StrkApp());
 }
