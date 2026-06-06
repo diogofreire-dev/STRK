@@ -12,27 +12,46 @@ class CalendarScreen extends StatefulWidget {
 }
 
 class _CalendarScreenState extends State<CalendarScreen> {
-  Habit? _selectedHabit;
+  Habit? _selectedHabit; // null = Todos
   Map<String, bool> _logs = {};
+  Map<String, int> _allLogs = {}; // date -> quantos hábitos feitos
   bool _loading = false;
 
   @override
   void initState() {
     super.initState();
-    if (widget.habits.isNotEmpty) {
-      _selectedHabit = widget.habits.first;
-      _loadLogs();
-    }
+    _loadLogs();
   }
 
+  bool get _isAll => _selectedHabit == null;
+
   Future<void> _loadLogs() async {
-    if (_selectedHabit == null) return;
     setState(() => _loading = true);
-    final logs = await HabitService.getLogsForHabit(_selectedHabit!.id);
-    setState(() {
-      _logs = logs;
-      _loading = false;
-    });
+
+    if (_isAll) {
+      // Carrega logs de todos os hábitos e combina
+      final Map<String, int> combined = {};
+      for (final habit in widget.habits) {
+        final logs = await HabitService.getLogsForHabit(habit.id);
+        logs.forEach((date, completed) {
+          if (completed) {
+            combined[date] = (combined[date] ?? 0) + 1;
+          }
+        });
+      }
+      setState(() {
+        _allLogs = combined;
+        _logs = {};
+        _loading = false;
+      });
+    } else {
+      final logs = await HabitService.getLogsForHabit(_selectedHabit!.id);
+      setState(() {
+        _logs = logs;
+        _allLogs = {};
+        _loading = false;
+      });
+    }
   }
 
   @override
@@ -82,11 +101,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
-        children: widget.habits.map((habit) {
-          final selected = _selectedHabit?.id == habit.id;
-          return GestureDetector(
+        children: [
+          // Botão "Todos"
+          GestureDetector(
             onTap: () {
-              setState(() => _selectedHabit = habit);
+              setState(() => _selectedHabit = null);
               _loadLogs();
             },
             child: AnimatedContainer(
@@ -94,7 +113,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               margin: const EdgeInsets.only(right: 8),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
-                color: selected
+                color: _isAll
                     ? const Color(0xFFC8FF00)
                     : const Color(0xFF1A1A1A),
                 borderRadius: BorderRadius.circular(99),
@@ -103,19 +122,19 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    habit.icon,
+                    Icons.grid_view_rounded,
                     size: 14,
-                    color: selected
+                    color: _isAll
                         ? const Color(0xFF0D0D0D)
                         : const Color.fromRGBO(255, 255, 255, 0.4),
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    habit.name,
+                    'Todos',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: selected
+                      color: _isAll
                           ? const Color(0xFF0D0D0D)
                           : const Color.fromRGBO(255, 255, 255, 0.4),
                     ),
@@ -123,8 +142,55 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 ],
               ),
             ),
-          );
-        }).toList(),
+          ),
+          // Hábitos individuais
+          ...widget.habits.map((habit) {
+            final selected = _selectedHabit?.id == habit.id;
+            return GestureDetector(
+              onTap: () {
+                setState(() => _selectedHabit = habit);
+                _loadLogs();
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                margin: const EdgeInsets.only(right: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: selected
+                      ? const Color(0xFFC8FF00)
+                      : const Color(0xFF1A1A1A),
+                  borderRadius: BorderRadius.circular(99),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      habit.icon,
+                      size: 14,
+                      color: selected
+                          ? const Color(0xFF0D0D0D)
+                          : const Color.fromRGBO(255, 255, 255, 0.4),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      habit.name,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: selected
+                            ? const Color(0xFF0D0D0D)
+                            : const Color.fromRGBO(255, 255, 255, 0.4),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+        ],
       ),
     );
   }
@@ -168,12 +234,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
     final weeks = 18;
     final totalDays = weeks * 7;
     final startDate = now.subtract(Duration(days: totalDays - 1));
-
-    final days = List.generate(totalDays, (i) {
-      return startDate.add(Duration(days: i));
-    });
-
+    final days = List.generate(
+      totalDays,
+      (i) => startDate.add(Duration(days: i)),
+    );
     final weekLabels = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
+    final maxCount = widget.habits.length == 0 ? 1 : widget.habits.length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -213,23 +279,42 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         }
                         final date = days[dayOffset];
                         final key = _dateKey(date);
-                        final completed = _logs[key] ?? false;
-                        final isToday =
-                            _dateKey(date) == HabitService.todayString();
+                        final isToday = key == HabitService.todayString();
                         final isFuture = date.isAfter(now);
 
+                        Color cellColor;
+                        String tooltip;
+
+                        if (_isAll) {
+                          final count = _allLogs[key] ?? 0;
+                          final opacity = isFuture || count == 0
+                              ? (isFuture ? 0.0 : 0.06)
+                              : (count / maxCount).clamp(0.15, 1.0);
+                          cellColor = isFuture
+                              ? Colors.transparent
+                              : count == 0
+                              ? const Color.fromRGBO(255, 255, 255, 0.06)
+                              : Color.fromRGBO(200, 255, 0, opacity);
+                          tooltip =
+                              '$key${count > 0 ? ' ($count/${widget.habits.length})' : ''}';
+                        } else {
+                          final completed = _logs[key] ?? false;
+                          cellColor = isFuture
+                              ? Colors.transparent
+                              : completed
+                              ? const Color(0xFFC8FF00)
+                              : const Color.fromRGBO(255, 255, 255, 0.06);
+                          tooltip = '$key${completed ? ' ✓' : ''}';
+                        }
+
                         return Tooltip(
-                          message: '$key${completed ? ' ✓' : ''}',
+                          message: tooltip,
                           child: Container(
                             width: 14,
                             height: 14,
                             margin: const EdgeInsets.all(2),
                             decoration: BoxDecoration(
-                              color: isFuture
-                                  ? Colors.transparent
-                                  : completed
-                                  ? const Color(0xFFC8FF00)
-                                  : const Color.fromRGBO(255, 255, 255, 0.06),
+                              color: cellColor,
                               borderRadius: BorderRadius.circular(3),
                               border: isToday
                                   ? Border.all(
@@ -253,6 +338,35 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Widget _buildStats() {
+    if (_isAll) {
+      final totalDays = _allLogs.length;
+      final perfectDays = _allLogs.values
+          .where((count) => count == widget.habits.length)
+          .length;
+      final activeDays = _allLogs.values.where((count) => count > 0).length;
+      final rate = totalDays == 0
+          ? 0
+          : ((activeDays / totalDays) * 100).round();
+
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1A1A1A),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildStatItem('Dias ativos', '$activeDays'),
+            _buildDividerV(),
+            _buildStatItem('Dias perfeitos', '$perfectDays'),
+            _buildDividerV(),
+            _buildStatItem('Taxa', '$rate%'),
+          ],
+        ),
+      );
+    }
+
     final completedDays = _logs.values.where((v) => v).length;
     final totalDays = _logs.length;
     final rate = totalDays == 0
