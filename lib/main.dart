@@ -649,13 +649,25 @@ class _HomeScreenState extends State<HomeScreen> {
                     letterSpacing: 0.8,
                   ),
                 ),
-                const Text(
-                  '+ Novo',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFFC8FF00),
-                    letterSpacing: 0.3,
+                GestureDetector(
+                  onTap: () async {
+                    final newHabit = await Navigator.push<Habit>(
+                      context,
+                      MaterialPageRoute(builder: (_) => const AddHabitScreen()),
+                    );
+                    if (newHabit != null) {
+                      setState(() => habits.add(newHabit));
+                      HabitService.saveHabit(newHabit);
+                    }
+                  },
+                  child: const Text(
+                    '+ Novo',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFFC8FF00),
+                      letterSpacing: 0.3,
+                    ),
                   ),
                 ),
               ],

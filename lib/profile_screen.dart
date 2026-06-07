@@ -259,17 +259,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _buildProfileCard(name, email, photo),
               const SizedBox(height: 24),
               _buildSection('Conta', [
-                _buildTile(
-                  icon: Icons.photo_camera_outlined,
-                  label: 'Foto de perfil',
-                  value: photo == null ? 'Sem foto' : 'Alterar',
-                  onTap: () async {
-                    final source = await _showPhotoSourceDialog();
-                    if (source != null) {
-                      await _pickProfilePhoto(source);
-                    }
-                  },
-                ),
                 if (photo != null)
                   _buildTile(
                     icon: Icons.delete_outline,
