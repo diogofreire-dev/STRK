@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -15,6 +14,7 @@ import 'profile_screen.dart';
 import 'stats_screen.dart';
 import 'calendar_screen.dart';
 import 'package:flutter/foundation.dart';
+import 'badges_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -426,12 +426,53 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     if (_currentTab == 2) {
-      return SafeArea(
-        child: Column(
-          children: [
-            _buildPageHeader('Stats'),
-            Expanded(child: StatsScreen(habits: habits)),
-          ],
+      return DefaultTabController(
+        length: 2,
+        child: SafeArea(
+          child: Column(
+            children: [
+              _buildPageHeader('Stats'),
+              Container(
+                margin: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1A1A1A),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: TabBar(
+                  labelColor: const Color(0xFF0D0D0D),
+                  unselectedLabelColor: const Color.fromRGBO(
+                    255,
+                    255,
+                    255,
+                    0.4,
+                  ),
+                  indicator: BoxDecoration(
+                    color: const Color(0xFFC8FF00),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  dividerColor: Colors.transparent,
+                  labelStyle: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  tabs: const [
+                    Tab(text: 'Estatísticas'),
+                    Tab(text: 'Conquistas'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    StatsScreen(habits: habits),
+                    BadgesScreen(habits: habits),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
