@@ -221,7 +221,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   Widget _buildMonthlySummary() {
     final now = DateTime.now();
-    final firstOfMonth = DateTime(now.year, now.month, 1);
     final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
     final pastDays = now.day; // days elapsed including today
 
@@ -229,7 +228,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
     int activeDays = 0;
     int perfectDays = 0;
     int bestDayCount = 0;
-    String bestDayLabel = '—';
 
     for (int d = 1; d <= pastDays; d++) {
       final date = DateTime(now.year, now.month, d);
@@ -247,7 +245,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
       if (total > 0 && count == total) perfectDays++;
       if (count > bestDayCount) {
         bestDayCount = count;
-        bestDayLabel = '${date.day}/${date.month}';
       }
     }
 
