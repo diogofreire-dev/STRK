@@ -283,7 +283,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         );
       default:
-        return const ProfileScreen();
+        // ✅ CORRIGIDO: passa habits ao ProfileScreen
+        return ProfileScreen(habits: habits);
     }
   }
 
@@ -293,31 +294,28 @@ class _HomeScreenState extends State<HomeScreen> {
     final name = _user?.displayName?.split(' ').first ?? 'strk';
     final photoUrl = _user?.photoURL;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          StrkHeader(
-            subtitle: _getGreeting(name),
-            trailing: _buildAvatar(photoUrl, name, radius: 24),
-          ),
-          const SizedBox(height: 12),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 24),
-            child: Text(
-              'Os teus\nhábitos.',
-              style: TextStyle(
-                fontSize: 36,
-                fontWeight: FontWeight.w800,
-                color: kTextPrimary,
-                letterSpacing: -1.5,
-                height: 1.1,
-              ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        StrkHeader(
+          subtitle: _getGreeting(name),
+          trailing: _buildAvatar(photoUrl, name, radius: 24),
+        ),
+        const SizedBox(height: 12),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24),
+          child: Text(
+            'Os teus\nhábitos.',
+            style: TextStyle(
+              fontSize: 36,
+              fontWeight: FontWeight.w800,
+              color: kTextPrimary,
+              letterSpacing: -1.5,
+              height: 1.1,
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -334,7 +332,8 @@ class _HomeScreenState extends State<HomeScreen> {
           trailing: GestureDetector(
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const ProfileScreen()),
+              // ✅ CORRIGIDO: MaterialPageRoute (sem duplo M) + habits
+              MaterialPageRoute(builder: (_) => ProfileScreen(habits: habits)),
             ),
             child: _buildAvatar(photoUrl, name, radius: 18),
           ),
@@ -359,7 +358,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => const ProfileScreen()),
+        MaterialPageRoute(builder: (_) => ProfileScreen(habits: habits)),
       ),
       child: CircleAvatar(
         radius: radius,

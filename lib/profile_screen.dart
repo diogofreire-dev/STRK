@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'profile_service.dart';
+import 'badges_screen.dart';
+import 'habit.dart';
 
 const _kOrange = Color(0xFFFF6B00);
 const _kBg = Color(0xFF0D0D0D);
@@ -11,7 +13,11 @@ const _kSurf = Color(0xFF1A1A1A);
 const _kText = Color(0xFFE8E8E8);
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  /// Passa os hábitos para poder calcular os badges no perfil.
+  /// Se não forem passados, a grelha de badges não aparece.
+  final List<Habit> habits;
+
+  const ProfileScreen({super.key, this.habits = const []});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -46,11 +52,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       final url = await ProfileService.uploadProfilePhoto(file);
       await ProfileService.saveProfilePhotoUrl(url);
-      if (mounted)
+      if (mounted) {
         setState(() {
           _photoUrl = url;
           _isUploading = false;
         });
+      }
     } catch (_) {
       _showMessage('Não foi possível carregar a foto.', isError: true);
       if (mounted) setState(() => _isUploading = false);
@@ -176,7 +183,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() => _isUploading = true);
     try {
       await ProfileService.removeProfilePhoto();
-      if (mounted) setState(() => _photoUrl = null);
+      if (mounted) {
+        setState(() => _photoUrl = null);
+      }
       await _refreshUser();
       _showMessage('Foto removida com sucesso.');
     } catch (_) {
@@ -205,10 +214,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final email = _user?.email ?? '';
     final photo = _photoUrl;
 
+    final badges = computeBadgesResolved(widget.habits);
+    final unlockedBadges = badges.where((b) => b.unlocked).toList();
+    final unlockedCount = unlockedBadges.length;
+    final totalCount = badges.length;
+
     return Scaffold(
       backgroundColor: _kBg,
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -226,9 +240,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              // ── Rest of profile ──────────────────────────────────────────
               _buildProfileCard(name, email, photo),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
+
+              // ── Conquistas ───────────────────────────────────────────────
+              if (widget.habits.isNotEmpty) ...[
+                _buildBadgesSection(
+                  unlockedBadges,
+                  unlockedCount,
+                  totalCount,
+                  badges,
+                ),
+                const SizedBox(height: 20),
+              ],
+
               _buildSection('Conta', [
                 if (photo != null)
                   _buildTile(
@@ -271,7 +296,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onTap: () => _confirmLogout(context),
                 ),
               ]),
-              const Spacer(),
+              const SizedBox(height: 32),
               const Center(
                 child: Text(
                   'strk v1.0.0',
@@ -282,12 +307,226 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
               ),
+              const SizedBox(height: 8),
             ],
           ),
         ),
       ),
     );
   }
+
+  // ── Badges section ────────────────────────────────────────────────────────
+
+  Widget _buildBadgesSection(
+    List<HabitBadge> unlockedBadges,
+    int unlockedCount,
+    int totalCount,
+    List<HabitBadge> allBadges,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: _kSurf,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'CONQUISTAS',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0x4DFFFFFF),
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: '$unlockedCount',
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            color: _kText,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        TextSpan(
+                          text: ' / $totalCount',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0x4DFFFFFF),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              // Trophy icon com contagem
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: _kOrange.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _kOrange.withValues(alpha: 0.25),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.emoji_events_rounded,
+                      color: Color(0xFFFFD60A),
+                      size: 18,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${((unlockedCount / totalCount) * 100).round()}%',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: _kOrange,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Barra de progresso
+          ClipRRect(
+            borderRadius: BorderRadius.circular(99),
+            child: LinearProgressIndicator(
+              value: totalCount == 0 ? 0 : unlockedCount / totalCount,
+              minHeight: 5,
+              backgroundColor: Colors.white10,
+              valueColor: const AlwaysStoppedAnimation<Color>(_kOrange),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Grelha estilo GitHub — todos os badges (desbloqueados + bloqueados)
+          _buildBadgeGrid(allBadges),
+
+          // Legenda dos últimos desbloqueados
+          if (unlockedBadges.isNotEmpty) ...[
+            const SizedBox(height: 20),
+            const Text(
+              'ÚLTIMAS CONQUISTAS',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: Color(0x33FFFFFF),
+                letterSpacing: 0.8,
+              ),
+            ),
+            const SizedBox(height: 10),
+            _buildRecentBadges(unlockedBadges),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Grelha compacta estilo GitHub — um círculo por badge
+  Widget _buildBadgeGrid(List<HabitBadge> badges) {
+    const iconSize = 36.0;
+    const spacing = 8.0;
+    return Wrap(
+      spacing: spacing,
+      runSpacing: spacing,
+      children: badges.map((badge) {
+        return Tooltip(
+          message: badge.unlocked ? badge.title : '${badge.title} (bloqueado)',
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            width: iconSize,
+            height: iconSize,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: badge.unlocked
+                  ? badge.color.withValues(alpha: 0.18)
+                  : Colors.white.withValues(alpha: 0.05),
+              border: Border.all(
+                color: badge.unlocked
+                    ? badge.color.withValues(alpha: 0.5)
+                    : Colors.white.withValues(alpha: 0.08),
+                width: 1.5,
+              ),
+            ),
+            child: Icon(
+              badge.unlocked ? badge.icon : Icons.lock_outline_rounded,
+              size: 16,
+              color: badge.unlocked
+                  ? badge.color
+                  : Colors.white.withValues(alpha: 0.15),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  /// Os 3 badges mais recentemente desbloqueados (últimos da lista)
+  Widget _buildRecentBadges(List<HabitBadge> unlocked) {
+    final recent = unlocked.reversed.take(3).toList();
+    return Row(
+      children: recent.map((badge) {
+        return Expanded(
+          child: Container(
+            margin: EdgeInsets.only(right: badge == recent.last ? 0 : 8),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: badge.color.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: badge.color.withValues(alpha: 0.2),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(badge.icon, size: 14, color: badge.color),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    badge.title,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: badge.color,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  // ── Profile card ──────────────────────────────────────────────────────────
 
   Widget _buildProfileCard(String name, String email, String? photo) {
     return Container(
@@ -336,7 +575,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Container(
                     width: 64,
                     height: 64,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: Colors.black45,
                       shape: BoxShape.circle,
                     ),
@@ -402,6 +641,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
+
+  // ── Section / Tile ────────────────────────────────────────────────────────
 
   Widget _buildSection(String title, List<Widget> tiles) {
     return Column(
@@ -478,6 +719,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
+
+  // ── Dialogs ───────────────────────────────────────────────────────────────
 
   void _editName(BuildContext context) {
     final controller = TextEditingController(text: _user?.displayName ?? '');
