@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -295,41 +294,28 @@ class _HomeScreenState extends State<HomeScreen> {
     final photoUrl = _user?.photoURL;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-      child: Row(
+      padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SvgPicture.asset('assets/images/strk_logo.svg', height: 26),
-                const SizedBox(height: 20),
-                Text(
-                  _getGreeting(name),
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Color(0x59FFFFFF),
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Os teus\nhábitos.',
-                  style: TextStyle(
-                    fontSize: 36,
-                    fontWeight: FontWeight.w800,
-                    color: kTextPrimary,
-                    letterSpacing: -1.5,
-                    height: 1.1,
-                  ),
-                ),
-              ],
+          StrkHeader(
+            subtitle: _getGreeting(name),
+            trailing: _buildAvatar(photoUrl, name, radius: 24),
+          ),
+          const SizedBox(height: 12),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24),
+            child: Text(
+              'Os teus\nhábitos.',
+              style: TextStyle(
+                fontSize: 36,
+                fontWeight: FontWeight.w800,
+                color: kTextPrimary,
+                letterSpacing: -1.5,
+                height: 1.1,
+              ),
             ),
           ),
-          const SizedBox(width: 12),
-          _buildAvatar(photoUrl, name, radius: 24),
         ],
       ),
     );
@@ -341,28 +327,21 @@ class _HomeScreenState extends State<HomeScreen> {
     final name = _user?.displayName?.split(' ').first ?? 'strk';
     final photoUrl = _user?.photoURL;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Logo row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              SvgPicture.asset('assets/images/strk_logo.svg', height: 22),
-              GestureDetector(
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ProfileScreen()),
-                ),
-                child: _buildAvatar(photoUrl, name, radius: 18),
-              ),
-            ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        StrkHeader(
+          trailing: GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ProfileScreen()),
+            ),
+            child: _buildAvatar(photoUrl, name, radius: 18),
           ),
-          const SizedBox(height: 16),
-          // Page title
-          Text(
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+          child: Text(
             title,
             style: const TextStyle(
               fontSize: 28,
@@ -371,8 +350,8 @@ class _HomeScreenState extends State<HomeScreen> {
               letterSpacing: -1,
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
