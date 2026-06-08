@@ -15,6 +15,15 @@ import 'stats_screen.dart';
 import 'calendar_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'badges_screen.dart';
+import 'strk_header.dart';
+
+// ── Flame colour constants ────────────────────────────────────────────────────
+const kFlameOrange = Color(0xFFFF6B00);
+const kFlameAmber = Color(0xFFFFB300);
+const kFlameEmber = Color(0xFFFF3B00);
+const kBg = Color(0xFF0D0D0D);
+const kSurface = Color(0xFF1A1A1A);
+const kTextPrimary = Color(0xFFE8E8E8);
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,27 +47,39 @@ class StrkApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF0D0D0D),
+        scaffoldBackgroundColor: kBg,
         colorScheme: const ColorScheme.dark(
-          primary: Color(0xFFC8FF00),
-          surface: Color(0xFF1A1A1A),
+          primary: kFlameOrange,
+          secondary: kFlameAmber,
+          surface: kSurface,
         ),
         fontFamily: 'SF Pro Display',
+        switchTheme: SwitchThemeData(
+          thumbColor: WidgetStateProperty.resolveWith(
+            (s) => s.contains(WidgetState.selected) ? kFlameOrange : null,
+          ),
+          trackColor: WidgetStateProperty.resolveWith(
+            (s) => s.contains(WidgetState.selected)
+                ? kFlameOrange.withValues(alpha: 0.3)
+                : null,
+          ),
+        ),
+        progressIndicatorTheme: const ProgressIndicatorThemeData(
+          color: kFlameOrange,
+        ),
       ),
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Scaffold(
-              backgroundColor: Color(0xFF0D0D0D),
+              backgroundColor: kBg,
               body: Center(
-                child: CircularProgressIndicator(color: Color(0xFFC8FF00)),
+                child: CircularProgressIndicator(color: kFlameOrange),
               ),
             );
           }
-          if (snapshot.hasData) {
-            return const HomeScreen();
-          }
+          if (snapshot.hasData) return const HomeScreen();
           return const AuthScreen();
         },
       ),
@@ -66,6 +87,7 @@ class StrkApp extends StatelessWidget {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -85,9 +107,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _user = FirebaseAuth.instance.currentUser;
     _userSubscription = FirebaseAuth.instance.userChanges().listen((user) {
       if (!mounted) return;
-      setState(() {
-        _user = user;
-      });
+      setState(() => _user = user);
     });
     _loadHabits();
   }
@@ -135,19 +155,17 @@ class _HomeScreenState extends State<HomeScreen> {
           : loaded;
 
       if (shouldReset) {
-        for (final habit in habits) {
-          if (!habit.completedToday) habit.streak = 0;
-          habit.completedToday = false;
+        for (final h in habits) {
+          if (!h.completedToday) h.streak = 0;
+          h.completedToday = false;
         }
       }
     });
 
-    // Schedule reminders for loaded habits so they persist across restarts
     for (final habit in habits) {
       if (habit.reminderEnabled &&
           habit.reminderHour != null &&
           habit.reminderMinute != null) {
-        // Cancel any existing scheduled notification (idempotent) then reschedule
         await NotificationsService.cancelReminder(habit.id);
         await NotificationsService.scheduleDailyReminder(
           habit.id,
@@ -166,11 +184,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void toggleHabit(Habit habit) {
     setState(() {
       habit.completedToday = !habit.completedToday;
-      if (habit.completedToday) {
-        habit.streak++;
-      } else {
-        habit.streak--;
-      }
+      habit.completedToday ? habit.streak++ : habit.streak--;
     });
     HabitService.saveHabit(habit);
     HabitService.saveDailyLog(
@@ -182,221 +196,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
   int get completedCount => habits.where((h) => h.completedToday).length;
 
-  void _showEditDialog(Habit habit) {
-    final controller = TextEditingController(text: habit.name);
-    bool reminderEnabled = habit.reminderEnabled;
-    TimeOfDay reminderTime = TimeOfDay(
-      hour: habit.reminderHour ?? 8,
-      minute: habit.reminderMinute ?? 0,
-    );
-
-    showDialog(
-      context: context,
-      builder: (_) => Dialog(
-        backgroundColor: const Color(0xFF1A1A1A),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: StatefulBuilder(
-            builder: (context, setStateDialog) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Editar hábito',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFFE8E8E8),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: controller,
-                    autofocus: true,
-                    style: const TextStyle(
-                      color: Color(0xFFE8E8E8),
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    cursorColor: const Color(0xFFC8FF00),
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: const Color(0xFF2C2C2C),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: Color(0xFFC8FF00),
-                          width: 1,
-                        ),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 12,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Switch(
-                        value: reminderEnabled,
-                        onChanged: (v) =>
-                            setStateDialog(() => reminderEnabled = v),
-                        activeThumbImage: null,
-                        activeThumbColor: const Color(0xFFC8FF00),
-                      ),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Lembrete diário',
-                        style: TextStyle(color: Color(0xFFE8E8E8)),
-                      ),
-                      const Spacer(),
-                      if (reminderEnabled)
-                        GestureDetector(
-                          onTap: () async {
-                            final t = await showTimePicker(
-                              context: context,
-                              initialTime: reminderTime,
-                            );
-                            if (t != null) {
-                              setStateDialog(() => reminderTime = t);
-                            }
-                          },
-                          child: Text(
-                            reminderTime.format(context),
-                            style: const TextStyle(color: Color(0xFFE8E8E8)),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF2C2C2C),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Text(
-                              'Cancelar',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF888888),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            if (controller.text.trim().isNotEmpty) {
-                              setState(
-                                () => habit.name = controller.text.trim(),
-                              );
-                              // update reminder fields
-                              habit.reminderEnabled = reminderEnabled;
-                              if (reminderEnabled) {
-                                habit.reminderHour = reminderTime.hour;
-                                habit.reminderMinute = reminderTime.minute;
-                              } else {
-                                habit.reminderHour = null;
-                                habit.reminderMinute = null;
-                              }
-                              HabitService.saveHabit(habit);
-
-                              // schedule or cancel notification
-                              if (habit.reminderEnabled &&
-                                  habit.reminderHour != null &&
-                                  habit.reminderMinute != null) {
-                                NotificationsService.scheduleDailyReminder(
-                                  habit.id,
-                                  habit.reminderHour!,
-                                  habit.reminderMinute!,
-                                  'Lembra-te de: ${habit.name}',
-                                  'Não te esqueças do teu hábito diário.',
-                                );
-                              } else {
-                                NotificationsService.cancelReminder(habit.id);
-                              }
-
-                              Navigator.pop(context);
-                              setState(() {});
-                            }
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFC8FF00),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Text(
-                              'Guardar',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF0D0D0D),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
-      ),
-    );
-  }
+  // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D0D),
+      backgroundColor: kBg,
       body: _buildTabContent(),
       floatingActionButton: _currentTab == 0
           ? FloatingActionButton(
-              backgroundColor: const Color(0xFFC8FF00),
-              foregroundColor: const Color(0xFF0D0D0D),
+              backgroundColor: kFlameOrange,
+              foregroundColor: Colors.white,
               elevation: 0,
-              onPressed: () async {
-                final newHabit = await Navigator.push<Habit>(
-                  context,
-                  MaterialPageRoute(builder: (_) => const AddHabitScreen()),
-                );
-                if (newHabit != null) {
-                  setState(() => habits.add(newHabit));
-                  HabitService.saveHabit(newHabit);
-                  if (newHabit.reminderEnabled &&
-                      newHabit.reminderHour != null &&
-                      newHabit.reminderMinute != null) {
-                    NotificationsService.scheduleDailyReminder(
-                      newHabit.id,
-                      newHabit.reminderHour!,
-                      newHabit.reminderMinute!,
-                      'Lembra-te de: ${newHabit.name}',
-                      'Não te esqueças do teu hábito diário.',
-                    );
-                  }
-                }
-              },
+              onPressed: _addHabit,
               child: const Icon(Icons.add, size: 28),
             )
           : null,
@@ -405,128 +217,81 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildTabContent() {
-    if (_currentTab == 0) {
-      return SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [_buildHeader(), _buildProgressCard(), _buildHabitsList()],
-        ),
-      );
-    }
-
-    if (_currentTab == 1) {
-      return SafeArea(
-        child: Column(
-          children: [
-            _buildPageHeader('Calendário'),
-            Expanded(child: CalendarScreen(habits: habits)),
-          ],
-        ),
-      );
-    }
-
-    if (_currentTab == 2) {
-      return DefaultTabController(
-        length: 2,
-        child: SafeArea(
+    switch (_currentTab) {
+      case 0:
+        return SafeArea(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildPageHeader('Stats'),
-              Container(
-                margin: const EdgeInsets.fromLTRB(24, 8, 24, 0),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1A1A1A),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: TabBar(
-                  labelColor: const Color(0xFF0D0D0D),
-                  unselectedLabelColor: const Color.fromRGBO(
-                    255,
-                    255,
-                    255,
-                    0.4,
-                  ),
-                  indicator: BoxDecoration(
-                    color: const Color(0xFFC8FF00),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  indicatorSize: TabBarIndicatorSize.tab,
-                  dividerColor: Colors.transparent,
-                  labelStyle: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  tabs: const [
-                    Tab(text: 'Estatísticas'),
-                    Tab(text: 'Conquistas'),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 8),
-              Expanded(
-                child: TabBarView(
-                  children: [
-                    StatsScreen(habits: habits),
-                    BadgesScreen(habits: habits),
-                  ],
-                ),
-              ),
+              _buildHomeHeader(),
+              _buildProgressCard(),
+              _buildHabitsList(),
             ],
           ),
-        ),
-      );
+        );
+      case 1:
+        return SafeArea(
+          child: Column(
+            children: [
+              _buildPageHeader('Calendário'),
+              Expanded(child: CalendarScreen(habits: habits)),
+            ],
+          ),
+        );
+      case 2:
+        return DefaultTabController(
+          length: 2,
+          child: SafeArea(
+            child: Column(
+              children: [
+                _buildPageHeader('Stats'),
+                Container(
+                  margin: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                  decoration: BoxDecoration(
+                    color: kSurface,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: TabBar(
+                    labelColor: kBg,
+                    unselectedLabelColor: Colors.white38,
+                    indicator: BoxDecoration(
+                      color: kFlameOrange,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    dividerColor: Colors.transparent,
+                    labelStyle: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    tabs: const [
+                      Tab(text: 'Estatísticas'),
+                      Tab(text: 'Conquistas'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: TabBarView(
+                    children: [
+                      StatsScreen(habits: habits),
+                      BadgesScreen(habits: habits),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      default:
+        return const ProfileScreen();
     }
-
-    return const ProfileScreen();
   }
 
-  Widget _buildPageHeader(String title) {
-    final name = _user?.displayName?.split(' ').first ?? 'Diogo';
-    final photoUrl = _user?.photoURL;
+  // ── Home header (logo + greeting + avatar) ────────────────────────────────
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFFE8E8E8),
-            ),
-          ),
-          GestureDetector(
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ProfileScreen()),
-            ),
-            child: CircleAvatar(
-              radius: 22,
-              backgroundColor: const Color(0xFF2C2C2C),
-              backgroundImage: photoUrl != null
-                  ? NetworkImage(photoUrl) as ImageProvider
-                  : null,
-              child: photoUrl == null
-                  ? Text(
-                      name.isNotEmpty ? name[0].toUpperCase() : 'D',
-                      style: const TextStyle(
-                        color: Color(0xFFC8FF00),
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    )
-                  : null,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    final name = _user?.displayName?.split(' ').first ?? 'Diogo';
+  Widget _buildHomeHeader() {
+    final name = _user?.displayName?.split(' ').first ?? 'strk';
     final photoUrl = _user?.photoURL;
 
     return Padding(
@@ -538,13 +303,13 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SvgPicture.asset('assets/images/strk_logo.svg', height: 28),
+                SvgPicture.asset('assets/images/strk_logo.svg', height: 26),
                 const SizedBox(height: 20),
                 Text(
                   _getGreeting(name),
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 13,
-                    color: const Color.fromRGBO(255, 255, 255, 0.35),
+                    color: Color(0x59FFFFFF),
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.5,
                   ),
@@ -555,7 +320,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: TextStyle(
                     fontSize: 36,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFFE8E8E8),
+                    color: kTextPrimary,
                     letterSpacing: -1.5,
                     height: 1.1,
                   ),
@@ -564,34 +329,87 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(width: 12),
-          CircleAvatar(
-            radius: 24,
-            backgroundColor: const Color(0xFF2C2C2C),
-            backgroundImage: photoUrl != null
-                ? NetworkImage(photoUrl) as ImageProvider
-                : null,
-            child: photoUrl == null
-                ? Text(
-                    name.isNotEmpty ? name[0].toUpperCase() : 'D',
-                    style: const TextStyle(
-                      color: Color(0xFFC8FF00),
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  )
-                : null,
+          _buildAvatar(photoUrl, name, radius: 24),
+        ],
+      ),
+    );
+  }
+
+  // ── Page header for secondary tabs (logo + title + avatar) ───────────────
+
+  Widget _buildPageHeader(String title) {
+    final name = _user?.displayName?.split(' ').first ?? 'strk';
+    final photoUrl = _user?.photoURL;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Logo row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              SvgPicture.asset('assets/images/strk_logo.svg', height: 22),
+              GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                ),
+                child: _buildAvatar(photoUrl, name, radius: 18),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Page title
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w800,
+              color: kTextPrimary,
+              letterSpacing: -1,
+            ),
           ),
         ],
       ),
     );
   }
 
+  Widget _buildAvatar(String? photoUrl, String name, {double radius = 22}) {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const ProfileScreen()),
+      ),
+      child: CircleAvatar(
+        radius: radius,
+        backgroundColor: const Color(0xFF2C2C2C),
+        backgroundImage: photoUrl != null
+            ? NetworkImage(photoUrl) as ImageProvider
+            : null,
+        child: photoUrl == null
+            ? Text(
+                name.isNotEmpty ? name[0].toUpperCase() : 'S',
+                style: TextStyle(
+                  color: kFlameOrange,
+                  fontSize: radius * 0.85,
+                  fontWeight: FontWeight.w800,
+                ),
+              )
+            : null,
+      ),
+    );
+  }
+
   String _getGreeting(String name) {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return 'Bom dia, $name 👋';
-    if (hour < 19) return 'Boa tarde, $name 👋';
+    final h = DateTime.now().hour;
+    if (h < 12) return 'Bom dia, $name 👋';
+    if (h < 19) return 'Boa tarde, $name 👋';
     return 'Boa noite, $name 🌙';
   }
+
+  // ── Progress card ─────────────────────────────────────────────────────────
 
   Widget _buildProgressCard() {
     final progress = habits.isEmpty ? 0.0 : completedCount / habits.length;
@@ -599,18 +417,21 @@ class _HomeScreenState extends State<HomeScreen> {
       margin: const EdgeInsets.fromLTRB(24, 20, 24, 0),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFFC8FF00),
+        gradient: const LinearGradient(
+          colors: [kFlameEmber, kFlameOrange, kFlameAmber],
+          stops: [0.0, 0.5, 1.0],
+        ),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'HOJE',
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w700,
-              color: const Color.fromRGBO(13, 13, 13, 0.5),
+              color: Color(0x80FFFFFF),
               letterSpacing: 1.2,
             ),
           ),
@@ -627,17 +448,17 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: const TextStyle(
                         fontSize: 42,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF0D0D0D),
+                        color: Colors.white,
                         letterSpacing: -2,
                         height: 1,
                       ),
                     ),
                     TextSpan(
                       text: '/${habits.length}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
-                        color: const Color.fromRGBO(13, 13, 13, 0.35),
+                        color: Color(0x80FFFFFF),
                         letterSpacing: -1,
                       ),
                     ),
@@ -646,9 +467,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               Text(
                 '${(progress * 100).round()}% feito',
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 13,
-                  color: const Color.fromRGBO(13, 13, 13, 0.5),
+                  color: Color(0xCCFFFFFF),
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -660,16 +481,16 @@ class _HomeScreenState extends State<HomeScreen> {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 4,
-              backgroundColor: const Color.fromRGBO(13, 13, 13, 0.15),
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                Color(0xFF0D0D0D),
-              ),
+              backgroundColor: Colors.white24,
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
             ),
           ),
         ],
       ),
     );
   }
+
+  // ── Habits list ───────────────────────────────────────────────────────────
 
   Widget _buildHabitsList() {
     return Expanded(
@@ -681,32 +502,23 @@ class _HomeScreenState extends State<HomeScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
+                const Text(
                   'HÁBITOS',
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: const Color.fromRGBO(255, 255, 255, 0.3),
+                    color: Color(0x4DFFFFFF),
                     letterSpacing: 0.8,
                   ),
                 ),
                 GestureDetector(
-                  onTap: () async {
-                    final newHabit = await Navigator.push<Habit>(
-                      context,
-                      MaterialPageRoute(builder: (_) => const AddHabitScreen()),
-                    );
-                    if (newHabit != null) {
-                      setState(() => habits.add(newHabit));
-                      HabitService.saveHabit(newHabit);
-                    }
-                  },
+                  onTap: _addHabit,
                   child: const Text(
                     '+ Novo',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFFC8FF00),
+                      color: kFlameOrange,
                       letterSpacing: 0.3,
                     ),
                   ),
@@ -718,10 +530,8 @@ class _HomeScreenState extends State<HomeScreen> {
               child: ListView.separated(
                 padding: const EdgeInsets.only(bottom: 100),
                 itemCount: habits.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 8),
-                itemBuilder: (context, index) {
-                  return _buildHabitCard(habits[index]);
-                },
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                itemBuilder: (_, i) => _buildHabitCard(habits[i]),
               ),
             ),
           ],
@@ -743,7 +553,7 @@ class _HomeScreenState extends State<HomeScreen> {
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
         decoration: BoxDecoration(
-          color: const Color.fromRGBO(255, 59, 48, 0.15),
+          color: const Color(0x26FF3B30),
           borderRadius: BorderRadius.circular(14),
         ),
         child: const Icon(
@@ -759,11 +569,11 @@ class _HomeScreenState extends State<HomeScreen> {
           duration: const Duration(milliseconds: 250),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A),
+            color: kSurface,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: habit.completedToday
-                  ? const Color.fromRGBO(200, 255, 0, 0.3)
+                  ? kFlameOrange.withValues(alpha: 0.35)
                   : Colors.transparent,
               width: 1,
             ),
@@ -780,9 +590,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Icon(
                   habit.icon,
                   size: 18,
-                  color: habit.completedToday
-                      ? const Color(0xFFC8FF00)
-                      : const Color.fromRGBO(255, 255, 255, 0.3),
+                  color: habit.completedToday ? kFlameOrange : Colors.white30,
                 ),
               ),
               const SizedBox(width: 12),
@@ -796,8 +604,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: habit.completedToday
-                            ? const Color(0xFFE8E8E8)
-                            : const Color.fromRGBO(255, 255, 255, 0.6),
+                            ? kTextPrimary
+                            : Colors.white60,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -810,15 +618,15 @@ class _HomeScreenState extends State<HomeScreen> {
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                               color: habit.completedToday
-                                  ? const Color(0xFFC8FF00)
-                                  : const Color.fromRGBO(255, 255, 255, 0.2),
+                                  ? kFlameOrange
+                                  : Colors.white24,
                             ),
                           ),
-                          TextSpan(
+                          const TextSpan(
                             text: ' seguidos',
                             style: TextStyle(
                               fontSize: 11,
-                              color: const Color.fromRGBO(255, 255, 255, 0.2),
+                              color: Colors.white24,
                             ),
                           ),
                         ],
@@ -833,22 +641,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 26,
                 decoration: BoxDecoration(
                   color: habit.completedToday
-                      ? const Color(0xFFC8FF00)
+                      ? kFlameOrange
                       : Colors.transparent,
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: habit.completedToday
-                        ? const Color(0xFFC8FF00)
-                        : const Color.fromRGBO(255, 255, 255, 0.15),
+                    color: habit.completedToday ? kFlameOrange : Colors.white24,
                     width: 1.5,
                   ),
                 ),
                 child: habit.completedToday
-                    ? const Icon(
-                        Icons.check,
-                        size: 14,
-                        color: Color(0xFF0D0D0D),
-                      )
+                    ? const Icon(Icons.check, size: 14, color: Colors.white)
                     : null,
               ),
             ],
@@ -858,10 +660,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // ── Tab bar ───────────────────────────────────────────────────────────────
+
   Widget _buildTabBar() {
     return Container(
       decoration: const BoxDecoration(
-        color: Color(0xFF0D0D0D),
+        color: kBg,
         border: Border(top: BorderSide(color: Color(0xFF222222), width: 0.5)),
       ),
       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -884,25 +688,213 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            size: 22,
-            color: active
-                ? const Color(0xFFC8FF00)
-                : const Color.fromRGBO(255, 255, 255, 0.25),
-          ),
+          Icon(icon, size: 22, color: active ? kFlameOrange : Colors.white24),
           const SizedBox(height: 4),
           Text(
             label,
             style: TextStyle(
               fontSize: 9,
               fontWeight: FontWeight.w600,
-              color: active
-                  ? const Color(0xFFC8FF00)
-                  : const Color.fromRGBO(255, 255, 255, 0.25),
+              color: active ? kFlameOrange : Colors.white24,
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ── Add habit ─────────────────────────────────────────────────────────────
+
+  Future<void> _addHabit() async {
+    final newHabit = await Navigator.push<Habit>(
+      context,
+      MaterialPageRoute(builder: (_) => const AddHabitScreen()),
+    );
+    if (newHabit != null) {
+      setState(() => habits.add(newHabit));
+      HabitService.saveHabit(newHabit);
+      if (newHabit.reminderEnabled &&
+          newHabit.reminderHour != null &&
+          newHabit.reminderMinute != null) {
+        NotificationsService.scheduleDailyReminder(
+          newHabit.id,
+          newHabit.reminderHour!,
+          newHabit.reminderMinute!,
+          'Lembra-te de: ${newHabit.name}',
+          'Não te esqueças do teu hábito diário.',
+        );
+      }
+    }
+  }
+
+  // ── Edit dialog ───────────────────────────────────────────────────────────
+
+  void _showEditDialog(Habit habit) {
+    final controller = TextEditingController(text: habit.name);
+    bool reminderEnabled = habit.reminderEnabled;
+    TimeOfDay reminderTime = TimeOfDay(
+      hour: habit.reminderHour ?? 8,
+      minute: habit.reminderMinute ?? 0,
+    );
+
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        backgroundColor: kSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: StatefulBuilder(
+            builder: (ctx, setStateDialog) => Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Editar hábito',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: kTextPrimary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: controller,
+                  autofocus: true,
+                  style: const TextStyle(
+                    color: kTextPrimary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  cursorColor: kFlameOrange,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: const Color(0xFF2C2C2C),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: kFlameOrange,
+                        width: 1,
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Switch(
+                      value: reminderEnabled,
+                      onChanged: (v) =>
+                          setStateDialog(() => reminderEnabled = v),
+                      activeThumbColor: kFlameOrange,
+                    ),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Lembrete diário',
+                      style: TextStyle(color: kTextPrimary),
+                    ),
+                    const Spacer(),
+                    if (reminderEnabled)
+                      GestureDetector(
+                        onTap: () async {
+                          final t = await showTimePicker(
+                            context: ctx,
+                            initialTime: reminderTime,
+                          );
+                          if (t != null) setStateDialog(() => reminderTime = t);
+                        },
+                        child: Text(
+                          reminderTime.format(ctx),
+                          style: const TextStyle(color: kTextPrimary),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => Navigator.pop(ctx),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2C2C2C),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Text(
+                            'Cancelar',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF888888),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          if (controller.text.trim().isEmpty) return;
+                          setState(() => habit.name = controller.text.trim());
+                          habit.reminderEnabled = reminderEnabled;
+                          habit.reminderHour = reminderEnabled
+                              ? reminderTime.hour
+                              : null;
+                          habit.reminderMinute = reminderEnabled
+                              ? reminderTime.minute
+                              : null;
+                          HabitService.saveHabit(habit);
+                          if (habit.reminderEnabled &&
+                              habit.reminderHour != null) {
+                            NotificationsService.scheduleDailyReminder(
+                              habit.id,
+                              habit.reminderHour!,
+                              habit.reminderMinute!,
+                              'Lembra-te de: ${habit.name}',
+                              'Não te esqueças do teu hábito diário.',
+                            );
+                          } else {
+                            NotificationsService.cancelReminder(habit.id);
+                          }
+                          Navigator.pop(ctx);
+                          setState(() {});
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: kFlameOrange,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Text(
+                            'Guardar',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

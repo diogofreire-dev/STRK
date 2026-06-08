@@ -1,8 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'profile_service.dart';
+
+const _kOrange = Color(0xFFFF6B00);
+const _kBg = Color(0xFF0D0D0D);
+const _kSurf = Color(0xFF1A1A1A);
+const _kText = Color(0xFFE8E8E8);
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -24,52 +30,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _refreshUser() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      await user.reload();
-    }
-    final refreshedUser = FirebaseAuth.instance.currentUser;
+    if (user != null) await user.reload();
+    final refreshed = FirebaseAuth.instance.currentUser;
     if (!mounted) return;
     setState(() {
-      _user = refreshedUser;
-      _photoUrl = refreshedUser?.photoURL;
+      _user = refreshed;
+      _photoUrl = refreshed?.photoURL;
     });
   }
 
   Future<void> _pickProfilePhoto(ImageSource source) async {
     final file = await ProfileService.pickProfilePhoto(source: source);
     if (file == null) return;
-
     setState(() => _isUploading = true);
-
     try {
       final url = await ProfileService.uploadProfilePhoto(file);
       await ProfileService.saveProfilePhotoUrl(url);
-
-      // Força atualização imediata com a URL nova
-      if (mounted) {
+      if (mounted)
         setState(() {
           _photoUrl = url;
           _isUploading = false;
         });
-      }
-    } catch (e) {
-      _showMessage(
-        'Não foi possível carregar a foto. Tenta novamente.',
-        isError: true,
-      );
+    } catch (_) {
+      _showMessage('Não foi possível carregar a foto.', isError: true);
       if (mounted) setState(() => _isUploading = false);
     }
   }
 
-  Future<ImageSource?> _showPhotoSourceDialog() {
-    return showModalBottomSheet<ImageSource>(
-      context: context,
-      backgroundColor: const Color(0xFF121212),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return SafeArea(
+  Future<ImageSource?> _showPhotoSourceDialog() =>
+      showModalBottomSheet<ImageSource>(
+        context: context,
+        backgroundColor: const Color(0xFF121212),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (ctx) => SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -78,7 +73,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: const Color.fromRGBO(255, 255, 255, 0.12),
+                  color: Colors.white12,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -87,35 +82,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ListTile(
                   leading: const Icon(
                     Icons.photo_camera_rounded,
-                    color: Color(0xFFC8FF00),
+                    color: _kOrange,
                   ),
                   title: const Text('Câmara'),
-                  onTap: () => Navigator.pop(context, ImageSource.camera),
+                  onTap: () => Navigator.pop(ctx, ImageSource.camera),
                 ),
               ListTile(
                 leading: const Icon(
                   Icons.photo_library_rounded,
-                  color: Color(0xFFC8FF00),
+                  color: _kOrange,
                 ),
                 title: const Text('Galeria'),
-                onTap: () => Navigator.pop(context, ImageSource.gallery),
+                onTap: () => Navigator.pop(ctx, ImageSource.gallery),
               ),
               const SizedBox(height: 16),
             ],
           ),
-        );
-      },
-    );
-  }
+        ),
+      );
 
-  void _showMessage(String message, {bool isError = false}) {
+  void _showMessage(String msg, {bool isError = false}) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
-        backgroundColor: isError
-            ? const Color(0xFFFF3B30)
-            : const Color(0xFF1A1A1A),
+        content: Text(msg),
+        backgroundColor: isError ? const Color(0xFFFF3B30) : _kSurf,
       ),
     );
   }
@@ -124,8 +115,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final confirmed =
         await showDialog<bool>(
           context: context,
-          builder: (context) => Dialog(
-            backgroundColor: const Color(0xFF1A1A1A),
+          builder: (ctx) => Dialog(
+            backgroundColor: _kSurf,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
@@ -139,7 +130,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFFE8E8E8),
+                      color: _kText,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -153,44 +144,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       Expanded(
                         child: GestureDetector(
-                          onTap: () => Navigator.pop(context, false),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF2C2C2C),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Text(
-                              'Cancelar',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF888888),
-                              ),
-                            ),
+                          onTap: () => Navigator.pop(ctx, false),
+                          child: _dialogBtn(
+                            'Cancelar',
+                            const Color(0xFF2C2C2C),
+                            const Color(0xFF888888),
                           ),
                         ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: GestureDetector(
-                          onTap: () => Navigator.pop(context, true),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFF3B30),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Text(
-                              'Remover',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFFFFFFFF),
-                              ),
-                            ),
+                          onTap: () => Navigator.pop(ctx, true),
+                          child: _dialogBtn(
+                            'Remover',
+                            const Color(0xFFFF3B30),
+                            Colors.white,
                           ),
                         ),
                       ),
@@ -204,33 +173,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
         false;
 
     if (!confirmed) return;
-
-    setState(() {
-      _isUploading = true;
-    });
-
+    setState(() => _isUploading = true);
     try {
       await ProfileService.removeProfilePhoto();
-      if (mounted) {
-        setState(() {
-          _photoUrl = null;
-        });
-      }
+      if (mounted) setState(() => _photoUrl = null);
       await _refreshUser();
       _showMessage('Foto removida com sucesso.');
     } catch (_) {
-      _showMessage(
-        'Não foi possível remover a foto. Tenta novamente.',
-        isError: true,
-      );
+      _showMessage('Não foi possível remover a foto.', isError: true);
     } finally {
-      if (mounted) {
-        setState(() {
-          _isUploading = false;
-        });
-      }
+      if (mounted) setState(() => _isUploading = false);
     }
   }
+
+  Widget _dialogBtn(String label, Color bg, Color fg) => Container(
+    padding: const EdgeInsets.symmetric(vertical: 12),
+    decoration: BoxDecoration(
+      color: bg,
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Text(
+      label,
+      textAlign: TextAlign.center,
+      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: fg),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -239,23 +206,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final photo = _photoUrl;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D0D),
+      backgroundColor: _kBg,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // ── Logo header ──────────────────────────────────────────────
+              SvgPicture.asset('assets/images/strk_logo.svg', height: 22),
+              const SizedBox(height: 20),
               const Text(
                 'Perfil',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFFE8E8E8),
+                  color: _kText,
                   letterSpacing: -1,
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
+              // ── Rest of profile ──────────────────────────────────────────
               _buildProfileCard(name, email, photo),
               const SizedBox(height: 24),
               _buildSection('Conta', [
@@ -283,17 +254,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     icon: Icons.verified_outlined,
                     label: 'Email não verificado',
                     value: 'Reenviar email',
-                    valueColor: const Color(0xFFC8FF00),
+                    valueColor: _kOrange,
                     onTap: () async {
                       await _user?.sendEmailVerification();
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Email de verificação enviado!'),
-                            backgroundColor: Color(0xFF1A1A1A),
-                          ),
-                        );
-                      }
+                      if (context.mounted)
+                        _showMessage('Email de verificação enviado!');
                     },
                   ),
               ]),
@@ -307,12 +272,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ]),
               const Spacer(),
-              Center(
+              const Center(
                 child: Text(
                   'strk v1.0.0',
                   style: TextStyle(
                     fontSize: 11,
-                    color: const Color.fromRGBO(255, 255, 255, 0.15),
+                    color: Color(0x26FFFFFF),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -328,7 +293,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: _kSurf,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -336,9 +301,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           GestureDetector(
             onTap: () async {
               final source = await _showPhotoSourceDialog();
-              if (source != null) {
-                await _pickProfilePhoto(source);
-              }
+              if (source != null) await _pickProfilePhoto(source);
             },
             child: Stack(
               alignment: Alignment.center,
@@ -363,7 +326,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             style: const TextStyle(
                               fontSize: 26,
                               fontWeight: FontWeight.w800,
-                              color: Color(0xFFC8FF00),
+                              color: _kOrange,
                             ),
                           ),
                         )
@@ -374,7 +337,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     width: 64,
                     height: 64,
                     decoration: BoxDecoration(
-                      color: const Color.fromRGBO(0, 0, 0, 0.35),
+                      color: Colors.black45,
                       shape: BoxShape.circle,
                     ),
                     child: const Center(
@@ -382,7 +345,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         width: 24,
                         height: 24,
                         child: CircularProgressIndicator(
-                          color: Color(0xFFC8FF00),
+                          color: _kOrange,
                           strokeWidth: 2.5,
                         ),
                       ),
@@ -395,19 +358,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     width: 28,
                     height: 28,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0D0D0D),
+                      color: _kBg,
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: const Color(0xFFC8FF00),
-                        width: 1.5,
-                      ),
+                      border: Border.all(color: _kOrange, width: 1.5),
                     ),
                     child: Icon(
                       _isUploading
                           ? Icons.hourglass_top_rounded
                           : Icons.photo_camera_rounded,
                       size: 16,
-                      color: const Color(0xFFC8FF00),
+                      color: _kOrange,
                     ),
                   ),
                 ),
@@ -424,15 +384,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   style: const TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFFE8E8E8),
+                    color: _kText,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   email,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 13,
-                    color: const Color.fromRGBO(255, 255, 255, 0.35),
+                    color: Color(0x59FFFFFF),
                   ),
                 ),
               ],
@@ -449,17 +409,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
       children: [
         Text(
           title.toUpperCase(),
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w600,
-            color: const Color.fromRGBO(255, 255, 255, 0.3),
+            color: Color(0x4DFFFFFF),
             letterSpacing: 0.8,
           ),
         ),
         const SizedBox(height: 10),
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A),
+            color: _kSurf,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Column(children: tiles),
@@ -479,29 +439,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           border: Border(
-            bottom: BorderSide(
-              color: const Color.fromRGBO(255, 255, 255, 0.05),
-              width: 0.5,
-            ),
+            bottom: BorderSide(color: Color(0x0DFFFFFF), width: 0.5),
           ),
         ),
         child: Row(
           children: [
-            Icon(
-              icon,
-              size: 18,
-              color: const Color.fromRGBO(255, 255, 255, 0.35),
-            ),
+            Icon(icon, size: 18, color: Colors.white38),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 label,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: const Color.fromRGBO(255, 255, 255, 0.7),
+                  color: Color(0xB3FFFFFF),
                 ),
               ),
             ),
@@ -510,16 +463,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 value,
                 style: TextStyle(
                   fontSize: 13,
-                  color:
-                      valueColor ?? const Color.fromRGBO(255, 255, 255, 0.25),
+                  color: valueColor ?? Colors.white24,
                   fontWeight: FontWeight.w500,
                 ),
               ),
             if (onTap != null)
-              Icon(
+              const Icon(
                 Icons.chevron_right_rounded,
                 size: 18,
-                color: const Color.fromRGBO(255, 255, 255, 0.15),
+                color: Color(0x26FFFFFF),
               ),
           ],
         ),
@@ -531,29 +483,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final controller = TextEditingController(text: _user?.displayName ?? '');
     showDialog(
       context: context,
-      builder: (_) => Dialog(
-        backgroundColor: const Color(0xFF1A1A1A),
+      builder: (ctx) => Dialog(
+        backgroundColor: _kSurf,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
                 'Editar nome',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFFE8E8E8),
+                  color: _kText,
                 ),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: controller,
                 autofocus: true,
-                style: const TextStyle(color: Color(0xFFE8E8E8), fontSize: 15),
-                cursorColor: const Color(0xFFC8FF00),
+                style: const TextStyle(color: _kText, fontSize: 15),
+                cursorColor: _kOrange,
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: const Color(0xFF2C2C2C),
@@ -563,10 +514,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      color: Color(0xFFC8FF00),
-                      width: 1,
-                    ),
+                    borderSide: const BorderSide(color: _kOrange, width: 1),
                   ),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 14,
@@ -579,22 +527,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   Expanded(
                     child: GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF2C2C2C),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Text(
-                          'Cancelar',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF888888),
-                          ),
-                        ),
+                      onTap: () => Navigator.pop(ctx),
+                      child: _dialogBtn(
+                        'Cancelar',
+                        const Color(0xFF2C2C2C),
+                        const Color(0xFF888888),
                       ),
                     ),
                   ),
@@ -602,31 +539,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Expanded(
                     child: GestureDetector(
                       onTap: () async {
-                        final newName = controller.text.trim();
-                        if (newName.isEmpty) return;
-                        await ProfileService.updateDisplayName(newName);
+                        final n = controller.text.trim();
+                        if (n.isEmpty) return;
+                        await ProfileService.updateDisplayName(n);
                         _refreshUser();
-                        if (context.mounted) {
-                          Navigator.pop(context);
+                        if (ctx.mounted) {
+                          Navigator.pop(ctx);
                           _showMessage('Nome atualizado com sucesso.');
                         }
                       },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFC8FF00),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Text(
-                          'Guardar',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF0D0D0D),
-                          ),
-                        ),
-                      ),
+                      child: _dialogBtn('Guardar', _kOrange, Colors.white),
                     ),
                   ),
                 ],
@@ -641,8 +563,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _confirmLogout(BuildContext context) {
     showDialog(
       context: context,
-      builder: (_) => Dialog(
-        backgroundColor: const Color(0xFF1A1A1A),
+      builder: (ctx) => Dialog(
+        backgroundColor: _kSurf,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -654,39 +576,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFFE8E8E8),
+                  color: _kText,
                 ),
               ),
               const SizedBox(height: 8),
-              Text(
+              const Text(
                 'Os teus hábitos ficam guardados na cloud.',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: const Color.fromRGBO(255, 255, 255, 0.35),
-                ),
+                style: TextStyle(fontSize: 13, color: Color(0x59FFFFFF)),
               ),
               const SizedBox(height: 24),
               Row(
                 children: [
                   Expanded(
                     child: GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF2C2C2C),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Text(
-                          'Cancelar',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF888888),
-                          ),
-                        ),
+                      onTap: () => Navigator.pop(ctx),
+                      child: _dialogBtn(
+                        'Cancelar',
+                        const Color(0xFF2C2C2C),
+                        const Color(0xFF888888),
                       ),
                     ),
                   ),
@@ -694,17 +602,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Expanded(
                     child: GestureDetector(
                       onTap: () async {
-                        Navigator.pop(context);
+                        Navigator.pop(ctx);
                         await FirebaseAuth.instance.signOut();
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          color: const Color.fromRGBO(255, 59, 48, 0.15),
+                          color: const Color(0x26FF3B30),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: const Color.fromRGBO(255, 59, 48, 0.3),
-                          ),
+                          border: Border.all(color: const Color(0x4DFF3B30)),
                         ),
                         child: const Text(
                           'Terminar',

@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'habit.dart';
 
+const _kOrange = Color(0xFFFF6B00);
+const _kAmber = Color(0xFFFFB300);
+const _kEmber = Color(0xFFFF3B00);
+const _kBg = Color(0xFF0D0D0D);
+const _kSurf = Color(0xFF1A1A1A);
+const _kText = Color(0xFFE8E8E8);
+
 class StatsScreen extends StatelessWidget {
   final List<Habit> habits;
-
   const StatsScreen({super.key, required this.habits});
 
   @override
@@ -19,7 +25,7 @@ class StatsScreen extends StatelessWidget {
         : habits.map((h) => h.streak).reduce((a, b) => a + b) / habits.length;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D0D),
+      backgroundColor: _kBg,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -49,18 +55,18 @@ class StatsScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFFC8FF00),
+        gradient: const LinearGradient(colors: [_kEmber, _kOrange, _kAmber]),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'HOJE',
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w700,
-              color: const Color.fromRGBO(13, 13, 13, 0.5),
+              color: Color(0x80FFFFFF),
               letterSpacing: 1.2,
             ),
           ),
@@ -77,17 +83,17 @@ class StatsScreen extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 48,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF0D0D0D),
+                        color: Colors.white,
                         letterSpacing: -2,
                         height: 1,
                       ),
                     ),
                     TextSpan(
                       text: '/$total',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
-                        color: const Color.fromRGBO(13, 13, 13, 0.35),
+                        color: Color(0x80FFFFFF),
                         letterSpacing: -1,
                       ),
                     ),
@@ -102,16 +108,13 @@ class StatsScreen extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF0D0D0D),
+                      color: Colors.white,
                       letterSpacing: -1,
                     ),
                   ),
-                  Text(
+                  const Text(
                     'concluído',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: const Color.fromRGBO(13, 13, 13, 0.5),
-                    ),
+                    style: TextStyle(fontSize: 12, color: Color(0x80FFFFFF)),
                   ),
                 ],
               ),
@@ -123,10 +126,8 @@ class StatsScreen extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 6,
-              backgroundColor: const Color.fromRGBO(13, 13, 13, 0.15),
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                Color(0xFF0D0D0D),
-              ),
+              backgroundColor: Colors.white24,
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
             ),
           ),
         ],
@@ -139,48 +140,48 @@ class StatsScreen extends StatelessWidget {
       children: [
         Expanded(
           child: _buildStatCard(
-            label: 'Melhor streak',
-            value: '$bestStreak',
-            unit: 'dias',
-            icon: Icons.local_fire_department_rounded,
-            iconColor: const Color(0xFFFF9500),
+            'Melhor streak',
+            '$bestStreak',
+            'dias',
+            Icons.local_fire_department_rounded,
+            _kOrange,
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: _buildStatCard(
-            label: 'Média de streak',
-            value: avgStreak.toStringAsFixed(1),
-            unit: 'dias',
-            icon: Icons.trending_up_rounded,
-            iconColor: const Color(0xFFC8FF00),
+            'Média de streak',
+            avgStreak.toStringAsFixed(1),
+            'dias',
+            Icons.trending_up_rounded,
+            _kAmber,
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: _buildStatCard(
-            label: 'Total hábitos',
-            value: '${habits.length}',
-            unit: 'hábitos',
-            icon: Icons.checklist_rounded,
-            iconColor: const Color(0xFF64D2FF),
+            'Total hábitos',
+            '${habits.length}',
+            'hábitos',
+            Icons.checklist_rounded,
+            const Color(0xFF64D2FF),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildStatCard({
-    required String label,
-    required String value,
-    required String unit,
-    required IconData icon,
-    required Color iconColor,
-  }) {
+  Widget _buildStatCard(
+    String label,
+    String value,
+    String unit,
+    IconData icon,
+    Color iconColor,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: _kSurf,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -193,24 +194,24 @@ class StatsScreen extends StatelessWidget {
             style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w800,
-              color: Color(0xFFE8E8E8),
+              color: _kText,
               letterSpacing: -1,
             ),
           ),
           Text(
             unit,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 11,
-              color: const Color.fromRGBO(255, 255, 255, 0.3),
+              color: Color(0x4DFFFFFF),
               fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             label,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 10,
-              color: const Color.fromRGBO(255, 255, 255, 0.25),
+              color: Color(0x40FFFFFF),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -219,23 +220,18 @@ class StatsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionLabel(String label) {
-    return Text(
-      label.toUpperCase(),
-      style: TextStyle(
-        fontSize: 11,
-        fontWeight: FontWeight.w600,
-        color: const Color.fromRGBO(255, 255, 255, 0.3),
-        letterSpacing: 0.8,
-      ),
-    );
-  }
+  Widget _buildSectionLabel(String label) => Text(
+    label.toUpperCase(),
+    style: const TextStyle(
+      fontSize: 11,
+      fontWeight: FontWeight.w600,
+      color: Color(0x4DFFFFFF),
+      letterSpacing: 0.8,
+    ),
+  );
 
   Widget _buildStreakList() {
-    if (habits.isEmpty) {
-      return _buildEmpty('Ainda não tens hábitos.');
-    }
-
+    if (habits.isEmpty) return _buildEmpty('Ainda não tens hábitos.');
     final sorted = [...habits]..sort((a, b) => b.streak.compareTo(a.streak));
     final maxStreak = sorted.first.streak;
 
@@ -246,7 +242,7 @@ class StatsScreen extends StatelessWidget {
           margin: const EdgeInsets.only(bottom: 10),
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A),
+            color: _kSurf,
             borderRadius: BorderRadius.circular(14),
           ),
           child: Row(
@@ -258,11 +254,7 @@ class StatsScreen extends StatelessWidget {
                   color: const Color(0xFF2C2C2C),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
-                  habit.icon,
-                  size: 16,
-                  color: const Color(0xFFC8FF00),
-                ),
+                child: Icon(habit.icon, size: 16, color: _kOrange),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -277,7 +269,7 @@ class StatsScreen extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFFE8E8E8),
+                            color: _kText,
                           ),
                         ),
                         Text(
@@ -285,7 +277,7 @@ class StatsScreen extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFFC8FF00),
+                            color: _kOrange,
                           ),
                         ),
                       ],
@@ -296,14 +288,9 @@ class StatsScreen extends StatelessWidget {
                       child: LinearProgressIndicator(
                         value: pct,
                         minHeight: 4,
-                        backgroundColor: const Color.fromRGBO(
-                          255,
-                          255,
-                          255,
-                          0.06,
-                        ),
+                        backgroundColor: Colors.white10,
                         valueColor: const AlwaysStoppedAnimation<Color>(
-                          Color(0xFFC8FF00),
+                          _kOrange,
                         ),
                       ),
                     ),
@@ -319,71 +306,61 @@ class StatsScreen extends StatelessWidget {
 
   Widget _buildHabitBars() {
     if (habits.isEmpty) return _buildEmpty('Ainda não tens hábitos.');
-
     return Column(
-      children: habits.map((habit) {
-        return Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: habit.completedToday
-                  ? const Color.fromRGBO(200, 255, 0, 0.25)
-                  : Colors.transparent,
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                habit.completedToday
-                    ? Icons.check_circle_rounded
-                    : Icons.radio_button_unchecked_rounded,
-                color: habit.completedToday
-                    ? const Color(0xFFC8FF00)
-                    : const Color.fromRGBO(255, 255, 255, 0.15),
-                size: 20,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  habit.name,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: habit.completedToday
-                        ? const Color(0xFFE8E8E8)
-                        : const Color.fromRGBO(255, 255, 255, 0.4),
-                  ),
-                ),
-              ),
-              Text(
-                habit.completedToday ? 'Feito ✓' : 'Por fazer',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+      children: habits
+          .map(
+            (habit) => Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: _kSurf,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
                   color: habit.completedToday
-                      ? const Color(0xFFC8FF00)
-                      : const Color.fromRGBO(255, 255, 255, 0.2),
+                      ? _kOrange.withValues(alpha: 0.25)
+                      : Colors.transparent,
                 ),
               ),
-            ],
-          ),
-        );
-      }).toList(),
+              child: Row(
+                children: [
+                  Icon(
+                    habit.completedToday
+                        ? Icons.check_circle_rounded
+                        : Icons.radio_button_unchecked_rounded,
+                    color: habit.completedToday ? _kOrange : Colors.white24,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      habit.name,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: habit.completedToday ? _kText : Colors.white70,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    habit.completedToday ? 'Feito ✓' : 'Por fazer',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: habit.completedToday ? _kOrange : Colors.white24,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+          .toList(),
     );
   }
 
-  Widget _buildEmpty(String message) {
-    return Center(
-      child: Text(
-        message,
-        style: TextStyle(
-          color: const Color.fromRGBO(255, 255, 255, 0.2),
-          fontSize: 14,
-        ),
-      ),
-    );
-  }
+  Widget _buildEmpty(String msg) => Center(
+    child: Text(
+      msg,
+      style: const TextStyle(color: Color(0x33FFFFFF), fontSize: 14),
+    ),
+  );
 }

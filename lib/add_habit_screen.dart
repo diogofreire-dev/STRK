@@ -1,5 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'habit.dart';
+
+const _kOrange = Color(0xFFFF6B00);
+const _kAmber = Color(0xFFFFB300);
+const _kEmber = Color(0xFFFF3B00);
+const _kBg = Color(0xFF0D0D0D);
+const _kSurf = Color(0xFF1A1A1A);
+const _kText = Color(0xFFE8E8E8);
 
 class AddHabitScreen extends StatefulWidget {
   const AddHabitScreen({super.key});
@@ -31,39 +39,33 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
 
   void _save() {
     if (_nameController.text.trim().isEmpty) return;
-
-    final newHabit = Habit(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: _nameController.text.trim(),
-      icon: _selectedIcon,
-      streak: 0,
-      reminderEnabled: _reminderEnabled,
-      reminderHour: _reminderEnabled ? _reminderTime.hour : null,
-      reminderMinute: _reminderEnabled ? _reminderTime.minute : null,
+    Navigator.pop(
+      context,
+      Habit(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        name: _nameController.text.trim(),
+        icon: _selectedIcon,
+        streak: 0,
+        reminderEnabled: _reminderEnabled,
+        reminderHour: _reminderEnabled ? _reminderTime.hour : null,
+        reminderMinute: _reminderEnabled ? _reminderTime.minute : null,
+      ),
     );
-
-    Navigator.pop(context, newHabit);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D0D),
+      backgroundColor: _kBg,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0D0D0D),
+        backgroundColor: _kBg,
         elevation: 0,
         leading: GestureDetector(
           onTap: () => Navigator.pop(context),
           child: Icon(Icons.close, color: Colors.white.withValues(alpha: 0.4)),
         ),
-        title: const Text(
-          'Novo hábito',
-          style: TextStyle(
-            color: Color(0xFFE8E8E8),
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
+        // Logo in AppBar
+        title: SvgPicture.asset('assets/images/strk_logo.svg', height: 22),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -71,6 +73,17 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Page title
+            const Text(
+              'Novo hábito',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w800,
+                color: _kText,
+                letterSpacing: -1,
+              ),
+            ),
+            const SizedBox(height: 24),
             _buildLabel('Nome'),
             const SizedBox(height: 10),
             _buildNameField(),
@@ -80,14 +93,10 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                 Switch(
                   value: _reminderEnabled,
                   onChanged: (v) => setState(() => _reminderEnabled = v),
-                  activeThumbImage: null,
-                  activeThumbColor: const Color(0xFFC8FF00),
+                  activeThumbColor: _kOrange,
                 ),
                 const SizedBox(width: 8),
-                const Text(
-                  'Lembrete diário',
-                  style: TextStyle(color: Color(0xFFE8E8E8)),
-                ),
+                const Text('Lembrete diário', style: TextStyle(color: _kText)),
                 const Spacer(),
                 if (_reminderEnabled)
                   GestureDetector(
@@ -100,7 +109,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                     },
                     child: Text(
                       _reminderTime.format(context),
-                      style: const TextStyle(color: Color(0xFFE8E8E8)),
+                      style: const TextStyle(color: _kText),
                     ),
                   ),
               ],
@@ -121,10 +130,10 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
   Widget _buildLabel(String text) {
     return Text(
       text.toUpperCase(),
-      style: TextStyle(
+      style: const TextStyle(
         fontSize: 11,
         fontWeight: FontWeight.w600,
-        color: Colors.white.withValues(alpha: 0.3),
+        color: Color(0x4DFFFFFF),
         letterSpacing: 0.8,
       ),
     );
@@ -135,27 +144,27 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
       controller: _nameController,
       autofocus: true,
       style: const TextStyle(
-        color: Color(0xFFE8E8E8),
+        color: _kText,
         fontSize: 16,
         fontWeight: FontWeight.w600,
       ),
-      cursorColor: const Color(0xFFC8FF00),
+      cursorColor: _kOrange,
       decoration: InputDecoration(
         hintText: 'Ex: Beber água, Exercício...',
-        hintStyle: TextStyle(
-          color: Colors.white.withValues(alpha: 0.2),
+        hintStyle: const TextStyle(
+          color: Color(0x33FFFFFF),
           fontSize: 16,
           fontWeight: FontWeight.w400,
         ),
         filled: true,
-        fillColor: const Color(0xFF1A1A1A),
+        fillColor: _kSurf,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFFC8FF00), width: 1),
+          borderSide: const BorderSide(color: _kOrange, width: 1),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
@@ -175,7 +184,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
         mainAxisSpacing: 10,
       ),
       itemCount: _icons.length,
-      itemBuilder: (context, index) {
+      itemBuilder: (_, index) {
         final item = _icons[index];
         final isSelected = _selectedIcon == item['icon'];
         return GestureDetector(
@@ -183,23 +192,17 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             decoration: BoxDecoration(
-              color: isSelected
-                  ? const Color(0xFFC8FF00).withValues(alpha: 0.15)
-                  : const Color(0xFF1A1A1A),
+              color: isSelected ? _kOrange.withValues(alpha: 0.15) : _kSurf,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isSelected
-                    ? const Color(0xFFC8FF00)
-                    : Colors.transparent,
+                color: isSelected ? _kOrange : Colors.transparent,
                 width: 1,
               ),
             ),
             child: Icon(
               item['icon'] as IconData,
               size: 20,
-              color: isSelected
-                  ? const Color(0xFFC8FF00)
-                  : Colors.white.withValues(alpha: 0.3),
+              color: isSelected ? _kOrange : Colors.white30,
             ),
           ),
         );
@@ -214,7 +217,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: const Color(0xFFC8FF00),
+          gradient: const LinearGradient(colors: [_kEmber, _kOrange, _kAmber]),
           borderRadius: BorderRadius.circular(14),
         ),
         child: const Text(
@@ -223,7 +226,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
           style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w800,
-            color: Color(0xFF0D0D0D),
+            color: Colors.white,
             letterSpacing: -0.3,
           ),
         ),

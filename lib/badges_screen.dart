@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'habit.dart';
 
+const _kOrange = Color(0xFFFF6B00);
+const _kAmber = Color(0xFFFFB300);
+const _kBg = Color(0xFF0D0D0D);
+const _kSurf = Color(0xFF1A1A1A);
+const _kText = Color(0xFFE8E8E8);
+
 class Badge {
-  final String id;
-  final String title;
-  final String description;
+  final String id, title, description;
   final IconData icon;
   final Color color;
   final bool unlocked;
-
   const Badge({
     required this.id,
     required this.title,
@@ -21,16 +24,15 @@ class Badge {
 
 class BadgesScreen extends StatelessWidget {
   final List<Habit> habits;
-
   const BadgesScreen({super.key, required this.habits});
 
   List<Badge> _computeBadges() {
-    final bestStreak = habits.isEmpty
+    final best = habits.isEmpty
         ? 0
         : habits.map((h) => h.streak).reduce((a, b) => a > b ? a : b);
-    final totalHabits = habits.length;
-    final completedToday = habits.where((h) => h.completedToday).length;
-    final allDoneToday = totalHabits > 0 && completedToday == totalHabits;
+    final total = habits.length;
+    final allDone =
+        total > 0 && habits.where((h) => h.completedToday).length == total;
 
     return [
       Badge(
@@ -38,8 +40,8 @@ class BadgesScreen extends StatelessWidget {
         title: 'Primeiro Passo',
         description: 'Criaste o teu primeiro hábito',
         icon: Icons.flag_rounded,
-        color: const Color(0xFFC8FF00),
-        unlocked: totalHabits >= 1,
+        color: _kOrange,
+        unlocked: total >= 1,
       ),
       Badge(
         id: 'five_habits',
@@ -47,23 +49,23 @@ class BadgesScreen extends StatelessWidget {
         description: 'Tens 5 hábitos ativos',
         icon: Icons.grid_view_rounded,
         color: const Color(0xFF64D2FF),
-        unlocked: totalHabits >= 5,
+        unlocked: total >= 5,
       ),
       Badge(
         id: 'streak_7',
         title: '7 Dias',
         description: 'Mantiveste um hábito 7 dias seguidos',
         icon: Icons.local_fire_department_rounded,
-        color: const Color(0xFFFF9500),
-        unlocked: bestStreak >= 7,
+        color: _kAmber,
+        unlocked: best >= 7,
       ),
       Badge(
         id: 'streak_14',
         title: '2 Semanas',
         description: 'Mantiveste um hábito 14 dias seguidos',
         icon: Icons.local_fire_department_rounded,
-        color: const Color(0xFFFF6B00),
-        unlocked: bestStreak >= 14,
+        color: _kOrange,
+        unlocked: best >= 14,
       ),
       Badge(
         id: 'streak_30',
@@ -71,7 +73,7 @@ class BadgesScreen extends StatelessWidget {
         description: 'Um mês inteiro sem falhar!',
         icon: Icons.emoji_events_rounded,
         color: const Color(0xFFFFD60A),
-        unlocked: bestStreak >= 30,
+        unlocked: best >= 30,
       ),
       Badge(
         id: 'streak_100',
@@ -79,7 +81,7 @@ class BadgesScreen extends StatelessWidget {
         description: 'Lendário. 100 dias de streak.',
         icon: Icons.military_tech_rounded,
         color: const Color(0xFFFF375F),
-        unlocked: bestStreak >= 100,
+        unlocked: best >= 100,
       ),
       Badge(
         id: 'perfect_day',
@@ -87,7 +89,7 @@ class BadgesScreen extends StatelessWidget {
         description: 'Completaste todos os hábitos hoje',
         icon: Icons.done_all_rounded,
         color: const Color(0xFF30D158),
-        unlocked: allDoneToday,
+        unlocked: allDone,
       ),
       Badge(
         id: 'dedicated',
@@ -95,7 +97,7 @@ class BadgesScreen extends StatelessWidget {
         description: 'Tens 3 ou mais hábitos ativos',
         icon: Icons.workspace_premium_rounded,
         color: const Color(0xFFBF5AF2),
-        unlocked: totalHabits >= 3,
+        unlocked: total >= 3,
       ),
     ];
   }
@@ -106,7 +108,7 @@ class BadgesScreen extends StatelessWidget {
     final unlocked = badges.where((b) => b.unlocked).length;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D0D),
+      backgroundColor: _kBg,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -117,12 +119,12 @@ class BadgesScreen extends StatelessWidget {
               const SizedBox(height: 24),
               _buildProgressCard(unlocked, badges.length),
               const SizedBox(height: 24),
-              Text(
+              const Text(
                 'CONQUISTAS',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: const Color.fromRGBO(255, 255, 255, 0.3),
+                  color: Color(0x4DFFFFFF),
                   letterSpacing: 0.8,
                 ),
               ),
@@ -134,9 +136,7 @@ class BadgesScreen extends StatelessWidget {
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
                 childAspectRatio: 1.1,
-                children: badges
-                    .map((badge) => _buildBadgeCard(badge))
-                    .toList(),
+                children: badges.map(_buildBadgeCard).toList(),
               ),
             ],
           ),
@@ -154,7 +154,7 @@ class BadgesScreen extends StatelessWidget {
           style: const TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w800,
-            color: Color(0xFFE8E8E8),
+            color: _kText,
             letterSpacing: -1,
             height: 1.1,
           ),
@@ -163,7 +163,7 @@ class BadgesScreen extends StatelessWidget {
           width: 56,
           height: 56,
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A),
+            color: _kSurf,
             borderRadius: BorderRadius.circular(16),
           ),
           child: const Icon(
@@ -181,7 +181,7 @@ class BadgesScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: _kSurf,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
@@ -190,11 +190,11 @@ class BadgesScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
+              const Text(
                 'Progresso',
                 style: TextStyle(
                   fontSize: 13,
-                  color: const Color.fromRGBO(255, 255, 255, 0.4),
+                  color: Color(0x66FFFFFF),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -202,7 +202,7 @@ class BadgesScreen extends StatelessWidget {
                 '${(progress * 100).round()}%',
                 style: const TextStyle(
                   fontSize: 13,
-                  color: Color(0xFFC8FF00),
+                  color: _kOrange,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -214,10 +214,8 @@ class BadgesScreen extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 6,
-              backgroundColor: const Color.fromRGBO(255, 255, 255, 0.06),
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                Color(0xFFC8FF00),
-              ),
+              backgroundColor: Colors.white10,
+              valueColor: const AlwaysStoppedAnimation<Color>(_kOrange),
             ),
           ),
           const SizedBox(height: 10),
@@ -225,10 +223,7 @@ class BadgesScreen extends StatelessWidget {
             unlocked == total
                 ? 'Desbloqueaste todas as conquistas! 🏆'
                 : 'Faltam ${total - unlocked} conquistas para completar.',
-            style: TextStyle(
-              fontSize: 12,
-              color: const Color.fromRGBO(255, 255, 255, 0.3),
-            ),
+            style: const TextStyle(fontSize: 12, color: Color(0x4DFFFFFF)),
           ),
         ],
       ),
@@ -240,14 +235,12 @@ class BadgesScreen extends StatelessWidget {
       duration: const Duration(milliseconds: 300),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: badge.unlocked
-            ? const Color(0xFF1A1A1A)
-            : const Color(0xFF111111),
+        color: badge.unlocked ? _kSurf : const Color(0xFF111111),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: badge.unlocked
               ? badge.color.withValues(alpha: 0.3)
-              : const Color.fromRGBO(255, 255, 255, 0.05),
+              : Colors.white12,
           width: 1,
         ),
       ),
@@ -260,14 +253,12 @@ class BadgesScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: badge.unlocked
                   ? badge.color.withValues(alpha: 0.15)
-                  : const Color.fromRGBO(255, 255, 255, 0.05),
+                  : Colors.white10,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
               badge.unlocked ? badge.icon : Icons.lock_outline_rounded,
-              color: badge.unlocked
-                  ? badge.color
-                  : const Color.fromRGBO(255, 255, 255, 0.2),
+              color: badge.unlocked ? badge.color : Colors.white24,
               size: 20,
             ),
           ),
@@ -277,9 +268,7 @@ class BadgesScreen extends StatelessWidget {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
-              color: badge.unlocked
-                  ? const Color(0xFFE8E8E8)
-                  : const Color.fromRGBO(255, 255, 255, 0.25),
+              color: badge.unlocked ? _kText : Colors.white24,
             ),
           ),
           const SizedBox(height: 3),
@@ -287,10 +276,8 @@ class BadgesScreen extends StatelessWidget {
             badge.description,
             style: TextStyle(
               fontSize: 10,
-              color: badge.unlocked
-                  ? const Color.fromRGBO(255, 255, 255, 0.35)
-                  : const Color.fromRGBO(255, 255, 255, 0.15),
               height: 1.3,
+              color: badge.unlocked ? Colors.white38 : Colors.white12,
             ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,

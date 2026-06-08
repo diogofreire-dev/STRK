@@ -2,6 +2,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+
+const _kOrange = Color(0xFFFF6B00);
+const _kAmber = Color(0xFFFFB300);
+const _kEmber = Color(0xFFFF3B00);
+const _kBg = Color(0xFF0D0D0D);
+const _kSurf = Color(0xFF1A1A1A);
+const _kText = Color(0xFFE8E8E8);
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -13,7 +21,7 @@ class AuthScreen extends StatefulWidget {
 class _AuthScreenState extends State<AuthScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
+  final _confirmController = TextEditingController();
   bool _isLogin = true;
   bool _isLoading = false;
   bool _obscurePassword = true;
@@ -28,8 +36,7 @@ class _AuthScreenState extends State<AuthScreen> {
       _success = null;
     });
 
-    if (!_isLogin &&
-        _passwordController.text != _confirmPasswordController.text) {
+    if (!_isLogin && _passwordController.text != _confirmController.text) {
       setState(() {
         _error = 'As passwords não coincidem.';
         _isLoading = false;
@@ -44,15 +51,13 @@ class _AuthScreenState extends State<AuthScreen> {
           password: _passwordController.text.trim(),
         );
       } else {
-        final credential = await FirebaseAuth.instance
-            .createUserWithEmailAndPassword(
-              email: _emailController.text.trim(),
-              password: _passwordController.text.trim(),
-            );
-        await credential.user?.sendEmailVerification();
+        final cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
+        await cred.user?.sendEmailVerification();
         setState(() {
-          _success =
-              'Conta criada! Verifica o teu email para ativares a conta.';
+          _success = 'Conta criada! Verifica o teu email.';
           _isLogin = true;
           _isLoading = false;
         });
@@ -70,11 +75,9 @@ class _AuthScreenState extends State<AuthScreen> {
       _isLoading = true;
       _error = null;
     });
-
     try {
       if (kIsWeb) {
-        final googleProvider = GoogleAuthProvider();
-        await FirebaseAuth.instance.signInWithPopup(googleProvider);
+        await FirebaseAuth.instance.signInWithPopup(GoogleAuthProvider());
       } else {
         final googleUser = await GoogleSignIn.instance.authenticate();
         final idToken = googleUser.authentication.idToken;
@@ -82,9 +85,9 @@ class _AuthScreenState extends State<AuthScreen> {
           setState(() => _error = 'Não foi possível autenticar com o Google.');
           return;
         }
-
-        final credential = GoogleAuthProvider.credential(idToken: idToken);
-        await FirebaseAuth.instance.signInWithCredential(credential);
+        await FirebaseAuth.instance.signInWithCredential(
+          GoogleAuthProvider.credential(idToken: idToken),
+        );
       }
     } on FirebaseAuthException catch (e) {
       setState(() => _error = _friendlyError(e.code));
@@ -115,7 +118,7 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D0D),
+      backgroundColor: _kBg,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -127,12 +130,31 @@ class _AuthScreenState extends State<AuthScreen> {
               const SizedBox(height: 48),
               _buildTitle(),
               const SizedBox(height: 32),
-              _buildEmailField(),
+              _buildField(
+                controller: _emailController,
+                hint: 'Email',
+                icon: Icons.mail_outline_rounded,
+                keyboardType: TextInputType.emailAddress,
+              ),
               const SizedBox(height: 12),
-              _buildPasswordField(),
+              _buildField(
+                controller: _passwordController,
+                hint: 'Password',
+                icon: Icons.lock_outline_rounded,
+                obscure: _obscurePassword,
+                toggleObscure: () =>
+                    setState(() => _obscurePassword = !_obscurePassword),
+              ),
               if (!_isLogin) ...[
                 const SizedBox(height: 12),
-                _buildConfirmPasswordField(),
+                _buildField(
+                  controller: _confirmController,
+                  hint: 'Confirmar password',
+                  icon: Icons.lock_outline_rounded,
+                  obscure: _obscureConfirm,
+                  toggleObscure: () =>
+                      setState(() => _obscureConfirm = !_obscureConfirm),
+                ),
               ],
               if (_error != null) ...[
                 const SizedBox(height: 12),
@@ -159,33 +181,7 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   Widget _buildLogo() {
-    return Row(
-      children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: const Color(0xFFC8FF00),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: const Icon(
-            Icons.bar_chart_rounded,
-            color: Color(0xFF0D0D0D),
-            size: 20,
-          ),
-        ),
-        const SizedBox(width: 10),
-        const Text(
-          'strk',
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w800,
-            color: Color(0xFFE8E8E8),
-            letterSpacing: -1,
-          ),
-        ),
-      ],
-    );
+    return SvgPicture.asset('assets/images/strk_logo.svg', height: 28);
   }
 
   Widget _buildTitle() {
@@ -197,7 +193,7 @@ class _AuthScreenState extends State<AuthScreen> {
           style: const TextStyle(
             fontSize: 36,
             fontWeight: FontWeight.w800,
-            color: Color(0xFFE8E8E8),
+            color: _kText,
             letterSpacing: -1.5,
             height: 1.1,
           ),
@@ -207,42 +203,13 @@ class _AuthScreenState extends State<AuthScreen> {
           _isLogin
               ? 'Inicia sessão para continuares os teus hábitos.'
               : 'Regista-te para começares a construir os teus hábitos.',
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 13,
-            color: const Color.fromRGBO(255, 255, 255, 0.35),
+            color: Color(0x59FFFFFF),
             height: 1.4,
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildEmailField() {
-    return _buildField(
-      controller: _emailController,
-      hint: 'Email',
-      icon: Icons.mail_outline_rounded,
-      keyboardType: TextInputType.emailAddress,
-    );
-  }
-
-  Widget _buildPasswordField() {
-    return _buildField(
-      controller: _passwordController,
-      hint: 'Password',
-      icon: Icons.lock_outline_rounded,
-      obscure: _obscurePassword,
-      toggleObscure: () => setState(() => _obscurePassword = !_obscurePassword),
-    );
-  }
-
-  Widget _buildConfirmPasswordField() {
-    return _buildField(
-      controller: _confirmPasswordController,
-      hint: 'Confirmar password',
-      icon: Icons.lock_outline_rounded,
-      obscure: _obscureConfirm,
-      toggleObscure: () => setState(() => _obscureConfirm = !_obscureConfirm),
     );
   }
 
@@ -258,16 +225,12 @@ class _AuthScreenState extends State<AuthScreen> {
       controller: controller,
       keyboardType: keyboardType,
       obscureText: obscure,
-      style: const TextStyle(color: Color(0xFFE8E8E8), fontSize: 15),
-      cursorColor: const Color(0xFFC8FF00),
+      style: const TextStyle(color: _kText, fontSize: 15),
+      cursorColor: _kOrange,
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: const Color.fromRGBO(255, 255, 255, 0.2)),
-        prefixIcon: Icon(
-          icon,
-          color: const Color.fromRGBO(255, 255, 255, 0.2),
-          size: 18,
-        ),
+        hintStyle: const TextStyle(color: Color(0x33FFFFFF)),
+        prefixIcon: Icon(icon, color: const Color(0x33FFFFFF), size: 18),
         suffixIcon: toggleObscure != null
             ? GestureDetector(
                 onTap: toggleObscure,
@@ -275,20 +238,20 @@ class _AuthScreenState extends State<AuthScreen> {
                   obscure
                       ? Icons.visibility_outlined
                       : Icons.visibility_off_outlined,
-                  color: const Color.fromRGBO(255, 255, 255, 0.2),
+                  color: const Color(0x33FFFFFF),
                   size: 18,
                 ),
               )
             : null,
         filled: true,
-        fillColor: const Color(0xFF1A1A1A),
+        fillColor: _kSurf,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFFC8FF00), width: 1),
+          borderSide: const BorderSide(color: _kOrange, width: 1),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
@@ -299,13 +262,13 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   Widget _buildMessage(String message, {required bool isError}) {
-    final color = isError ? const Color(0xFFFF3B30) : const Color(0xFFC8FF00);
+    final color = isError ? const Color(0xFFFF3B30) : _kOrange;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: color.withAlpha((0.1 * 255).round()),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withAlpha((0.3 * 255).round())),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -339,7 +302,7 @@ class _AuthScreenState extends State<AuthScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: const Color(0xFFC8FF00),
+          gradient: const LinearGradient(colors: [_kEmber, _kOrange, _kAmber]),
           borderRadius: BorderRadius.circular(14),
         ),
         child: _isLoading
@@ -349,7 +312,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: Color(0xFF0D0D0D),
+                    color: Colors.white,
                   ),
                 ),
               )
@@ -359,7 +322,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF0D0D0D),
+                  color: Colors.white,
                   letterSpacing: -0.3,
                 ),
               ),
@@ -370,22 +333,15 @@ class _AuthScreenState extends State<AuthScreen> {
   Widget _buildDivider() {
     return Row(
       children: [
-        Expanded(
-          child: Divider(color: const Color.fromRGBO(255, 255, 255, 0.1)),
-        ),
+        const Expanded(child: Divider(color: Color(0x1AFFFFFF))),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Text(
             'ou',
-            style: TextStyle(
-              color: const Color.fromRGBO(255, 255, 255, 0.25),
-              fontSize: 12,
-            ),
+            style: const TextStyle(color: Color(0x40FFFFFF), fontSize: 12),
           ),
         ),
-        Expanded(
-          child: Divider(color: const Color.fromRGBO(255, 255, 255, 0.1)),
-        ),
+        const Expanded(child: Divider(color: Color(0x1AFFFFFF))),
       ],
     );
   }
@@ -397,32 +353,27 @@ class _AuthScreenState extends State<AuthScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: const Color(0xFF1A1A1A),
+          color: _kSurf,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color.fromRGBO(255, 255, 255, 0.08)),
+          border: Border.all(color: const Color(0x14FFFFFF)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 20,
-              height: 20,
-              decoration: const BoxDecoration(shape: BoxShape.circle),
-              child: const Text(
-                'G',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Color(0xFFE8E8E8),
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                ),
+            const Text(
+              'G',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: _kText,
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(width: 10),
             Text(
               _isLogin ? 'Entrar com Google' : 'Registar com Google',
               style: const TextStyle(
-                color: Color(0xFFE8E8E8),
+                color: _kText,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
@@ -439,10 +390,7 @@ class _AuthScreenState extends State<AuthScreen> {
       children: [
         Text(
           _isLogin ? 'Não tens conta? ' : 'Já tens conta? ',
-          style: TextStyle(
-            color: const Color.fromRGBO(255, 255, 255, 0.3),
-            fontSize: 13,
-          ),
+          style: const TextStyle(color: Color(0x4DFFFFFF), fontSize: 13),
         ),
         GestureDetector(
           onTap: () => setState(() {
@@ -453,7 +401,7 @@ class _AuthScreenState extends State<AuthScreen> {
           child: Text(
             _isLogin ? 'Regista-te' : 'Inicia sessão',
             style: const TextStyle(
-              color: Color(0xFFC8FF00),
+              color: _kOrange,
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
