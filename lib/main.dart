@@ -15,9 +15,8 @@ import 'calendar_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'badges_screen.dart';
 import 'strk_header.dart';
-import 'strk_mascot.dart'; // ← novo
+import 'strk_mascot.dart';
 
-// ── Flame colour constants ────────────────────────────────────────────────────
 const kFlameOrange = Color(0xFFFF6B00);
 const kFlameAmber = Color(0xFFFFB300);
 const kFlameEmber = Color(0xFFFF3B00);
@@ -87,7 +86,6 @@ class StrkApp extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -196,7 +194,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   int get completedCount => habits.where((h) => h.completedToday).length;
 
-  // ── Derivar mood da mascote a partir do estado dos hábitos ────────────────
   MascotMood get _mascotMood {
     if (habits.isEmpty) return MascotMood.idle;
     final allDone = habits.every((h) => h.completedToday);
@@ -206,7 +203,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return MascotMood.idle;
   }
 
-  // ── Mensagem contextual para a bolha ──────────────────────────────────────
   String get _mascotMessage {
     final name = _user?.displayName?.split(' ').first ?? 'campeão';
     switch (_mascotMood) {
@@ -225,8 +221,6 @@ class _HomeScreenState extends State<HomeScreen> {
         return 'Está na hora de voltar... 😴';
     }
   }
-
-  // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -254,7 +248,7 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHomeHeader(),
-              _buildMascotSection(), // ← mascote
+              _buildMascotSection(),
               _buildProgressCard(),
               _buildHabitsList(),
             ],
@@ -319,7 +313,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // ── Mascote section (ecrã Hoje) ───────────────────────────────────────────
+  // ── Mascote section — tamanho 160, só no ecrã Hoje ───────────────────────
 
   Widget _buildMascotSection() {
     return AnimatedSwitcher(
@@ -329,7 +323,7 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
         child: Row(
           children: [
-            StrkMascot(mood: _mascotMood, size: 72),
+            StrkMascot(mood: _mascotMood, size: 160),
             const SizedBox(width: 14),
             Expanded(
               child: MascotBubble(
@@ -343,7 +337,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ── Home header (logo + greeting + avatar) ────────────────────────────────
+  // ── Home header ───────────────────────────────────────────────────────────
 
   Widget _buildHomeHeader() {
     final name = _user?.displayName?.split(' ').first ?? 'strk';
@@ -373,8 +367,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
-
-  // ── Page header for secondary tabs ───────────────────────────────────────
 
   Widget _buildPageHeader(String title) {
     final name = _user?.displayName?.split(' ').first ?? 'strk';

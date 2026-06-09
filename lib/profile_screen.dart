@@ -6,7 +6,6 @@ import 'package:image_picker/image_picker.dart';
 import 'profile_service.dart';
 import 'badges_screen.dart';
 import 'habit.dart';
-import 'strk_mascot.dart'; // ← novo
 
 const _kOrange = Color(0xFFFF6B00);
 const _kBg = Color(0xFF0D0D0D);
@@ -43,35 +42,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
-  // ── Mood derivado dos hábitos ─────────────────────────────────────────────
-  MascotMood get _mood {
-    final habits = widget.habits;
-    if (habits.isEmpty) return MascotMood.idle;
-    final allDone = habits.every((h) => h.completedToday);
-    if (allDone) return MascotMood.celebrating;
-    final anyAtRisk = habits.any((h) => h.streak > 0 && !h.completedToday);
-    if (anyAtRisk) return MascotMood.encouraging;
-    return MascotMood.idle;
-  }
-
-  String get _moodMessage {
-    final name = _user?.displayName?.split(' ').first ?? '';
-    final greeting = name.isNotEmpty ? ', $name' : '';
-    switch (_mood) {
-      case MascotMood.celebrating:
-        return 'Dia perfeito$greeting! 🔥';
-      case MascotMood.encouraging:
-        return 'Ainda dá tempo$greeting! 💪';
-      case MascotMood.idle:
-        final badges = computeBadgesResolved(widget.habits);
-        final count = badges.where((b) => b.unlocked).length;
-        return '$count conquistas desbloqueadas 🏆';
-      case MascotMood.sleeping:
-        return 'Volta em breve$greeting 😴';
-    }
-  }
-
-  // ── Photo helpers ─────────────────────────────────────────────────────────
   Future<void> _pickProfilePhoto(ImageSource source) async {
     final file = await ProfileService.pickProfilePhoto(source: source);
     if (file == null) return;
@@ -232,8 +202,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     ),
   );
 
-  // ── Build ─────────────────────────────────────────────────────────────────
-
   @override
   Widget build(BuildContext context) {
     final name = _user?.displayName ?? 'Sem nome';
@@ -253,10 +221,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Logo ────────────────────────────────────────────────────
               SvgPicture.asset('assets/images/strk_logo.svg', height: 22),
               const SizedBox(height: 20),
-
               const Text(
                 'Perfil',
                 style: TextStyle(
@@ -267,15 +233,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-
-              // ── Mascote centrada ─────────────────────────────────────────
-              _buildMascotSection(),
-              const SizedBox(height: 20),
-
               _buildProfileCard(name, email, photo),
               const SizedBox(height: 20),
-
-              // ── Conquistas ───────────────────────────────────────────────
               if (widget.habits.isNotEmpty) ...[
                 _buildBadgesSection(
                   unlockedBadges,
@@ -285,7 +244,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 20),
               ],
-
               _buildSection('Conta', [
                 if (photo != null)
                   _buildTile(
@@ -347,27 +305,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ── Mascote + bolha no topo do perfil ─────────────────────────────────────
-  Widget _buildMascotSection() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      decoration: BoxDecoration(
-        color: _kSurf,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          StrkMascot(mood: _mood, size: 72),
-          const SizedBox(width: 14),
-          Expanded(
-            child: MascotBubble(mood: _mood, customMessage: _moodMessage),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Badges section ────────────────────────────────────────────────────────
   Widget _buildBadgesSection(
     List<HabitBadge> unlockedBadges,
     int unlockedCount,
@@ -567,7 +504,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ── Profile card ──────────────────────────────────────────────────────────
   Widget _buildProfileCard(String name, String email, String? photo) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -682,7 +618,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ── Section / Tile ────────────────────────────────────────────────────────
   Widget _buildSection(String title, List<Widget> tiles) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -759,7 +694,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ── Dialogs ───────────────────────────────────────────────────────────────
   void _editName(BuildContext context) {
     final controller = TextEditingController(text: _user?.displayName ?? '');
     showDialog(
