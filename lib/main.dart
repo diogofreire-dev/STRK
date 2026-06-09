@@ -15,6 +15,7 @@ import 'calendar_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'badges_screen.dart';
 import 'strk_header.dart';
+import 'strk_mascot.dart'; // ← novo
 
 // ── Flame colour constants ────────────────────────────────────────────────────
 const kFlameOrange = Color(0xFFFF6B00);
@@ -195,6 +196,36 @@ class _HomeScreenState extends State<HomeScreen> {
 
   int get completedCount => habits.where((h) => h.completedToday).length;
 
+  // ── Derivar mood da mascote a partir do estado dos hábitos ────────────────
+  MascotMood get _mascotMood {
+    if (habits.isEmpty) return MascotMood.idle;
+    final allDone = habits.every((h) => h.completedToday);
+    if (allDone) return MascotMood.celebrating;
+    final anyAtRisk = habits.any((h) => h.streak > 0 && !h.completedToday);
+    if (anyAtRisk) return MascotMood.encouraging;
+    return MascotMood.idle;
+  }
+
+  // ── Mensagem contextual para a bolha ──────────────────────────────────────
+  String get _mascotMessage {
+    final name = _user?.displayName?.split(' ').first ?? 'campeão';
+    switch (_mascotMood) {
+      case MascotMood.celebrating:
+        return 'Perfeito, $name! Todos os hábitos feitos 🔥';
+      case MascotMood.encouraging:
+        final remaining = habits.where((h) => !h.completedToday).length;
+        return 'Ainda faltam $remaining hábito${remaining > 1 ? 's' : ''} — vai lá! 💪';
+      case MascotMood.idle:
+        final best = habits.isEmpty
+            ? 0
+            : habits.map((h) => h.streak).reduce((a, b) => a > b ? a : b);
+        if (best > 0) return 'Streak de $best dias — mantém o ritmo!';
+        return 'Pronto para começar o dia? 🔥';
+      case MascotMood.sleeping:
+        return 'Está na hora de voltar... 😴';
+    }
+  }
+
   // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
@@ -223,6 +254,7 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHomeHeader(),
+              _buildMascotSection(), // ← mascote
               _buildProgressCard(),
               _buildHabitsList(),
             ],
@@ -283,9 +315,32 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         );
       default:
-        // ✅ CORRIGIDO: passa habits ao ProfileScreen
         return ProfileScreen(habits: habits);
     }
+  }
+
+  // ── Mascote section (ecrã Hoje) ───────────────────────────────────────────
+
+  Widget _buildMascotSection() {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 400),
+      child: Padding(
+        key: ValueKey(_mascotMood),
+        padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+        child: Row(
+          children: [
+            StrkMascot(mood: _mascotMood, size: 72),
+            const SizedBox(width: 14),
+            Expanded(
+              child: MascotBubble(
+                mood: _mascotMood,
+                customMessage: _mascotMessage,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   // ── Home header (logo + greeting + avatar) ────────────────────────────────
@@ -319,7 +374,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ── Page header for secondary tabs (logo + title + avatar) ───────────────
+  // ── Page header for secondary tabs ───────────────────────────────────────
 
   Widget _buildPageHeader(String title) {
     final name = _user?.displayName?.split(' ').first ?? 'strk';
@@ -332,7 +387,6 @@ class _HomeScreenState extends State<HomeScreen> {
           trailing: GestureDetector(
             onTap: () => Navigator.push(
               context,
-              // ✅ CORRIGIDO: MaterialPageRoute (sem duplo M) + habits
               MaterialPageRoute(builder: (_) => ProfileScreen(habits: habits)),
             ),
             child: _buildAvatar(photoUrl, name, radius: 18),
@@ -392,7 +446,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildProgressCard() {
     final progress = habits.isEmpty ? 0.0 : completedCount / habits.length;
     return Container(
-      margin: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+      margin: const EdgeInsets.fromLTRB(24, 16, 24, 0),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -473,7 +527,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildHabitsList() {
     return Expanded(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

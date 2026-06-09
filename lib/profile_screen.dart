@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'profile_service.dart';
 import 'badges_screen.dart';
 import 'habit.dart';
+import 'strk_mascot.dart'; // ← novo
 
 const _kOrange = Color(0xFFFF6B00);
 const _kBg = Color(0xFF0D0D0D);
@@ -13,10 +14,7 @@ const _kSurf = Color(0xFF1A1A1A);
 const _kText = Color(0xFFE8E8E8);
 
 class ProfileScreen extends StatefulWidget {
-  /// Passa os hábitos para poder calcular os badges no perfil.
-  /// Se não forem passados, a grelha de badges não aparece.
   final List<Habit> habits;
-
   const ProfileScreen({super.key, this.habits = const []});
 
   @override
@@ -45,6 +43,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
+  // ── Mood derivado dos hábitos ─────────────────────────────────────────────
+  MascotMood get _mood {
+    final habits = widget.habits;
+    if (habits.isEmpty) return MascotMood.idle;
+    final allDone = habits.every((h) => h.completedToday);
+    if (allDone) return MascotMood.celebrating;
+    final anyAtRisk = habits.any((h) => h.streak > 0 && !h.completedToday);
+    if (anyAtRisk) return MascotMood.encouraging;
+    return MascotMood.idle;
+  }
+
+  String get _moodMessage {
+    final name = _user?.displayName?.split(' ').first ?? '';
+    final greeting = name.isNotEmpty ? ', $name' : '';
+    switch (_mood) {
+      case MascotMood.celebrating:
+        return 'Dia perfeito$greeting! 🔥';
+      case MascotMood.encouraging:
+        return 'Ainda dá tempo$greeting! 💪';
+      case MascotMood.idle:
+        final badges = computeBadgesResolved(widget.habits);
+        final count = badges.where((b) => b.unlocked).length;
+        return '$count conquistas desbloqueadas 🏆';
+      case MascotMood.sleeping:
+        return 'Volta em breve$greeting 😴';
+    }
+  }
+
+  // ── Photo helpers ─────────────────────────────────────────────────────────
   Future<void> _pickProfilePhoto(ImageSource source) async {
     final file = await ProfileService.pickProfilePhoto(source: source);
     if (file == null) return;
@@ -52,12 +79,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       final url = await ProfileService.uploadProfilePhoto(file);
       await ProfileService.saveProfilePhotoUrl(url);
-      if (mounted) {
+      if (mounted)
         setState(() {
           _photoUrl = url;
           _isUploading = false;
         });
-      }
     } catch (_) {
       _showMessage('Não foi possível carregar a foto.', isError: true);
       if (mounted) setState(() => _isUploading = false);
@@ -183,9 +209,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() => _isUploading = true);
     try {
       await ProfileService.removeProfilePhoto();
-      if (mounted) {
-        setState(() => _photoUrl = null);
-      }
+      if (mounted) setState(() => _photoUrl = null);
       await _refreshUser();
       _showMessage('Foto removida com sucesso.');
     } catch (_) {
@@ -208,6 +232,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     ),
   );
 
+  // ── Build ─────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
     final name = _user?.displayName ?? 'Sem nome';
@@ -227,9 +253,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Logo header ──────────────────────────────────────────────
+              // ── Logo ────────────────────────────────────────────────────
               SvgPicture.asset('assets/images/strk_logo.svg', height: 22),
               const SizedBox(height: 20),
+
               const Text(
                 'Perfil',
                 style: TextStyle(
@@ -239,7 +266,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   letterSpacing: -1,
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
+
+              // ── Mascote centrada ─────────────────────────────────────────
+              _buildMascotSection(),
+              const SizedBox(height: 20),
+
               _buildProfileCard(name, email, photo),
               const SizedBox(height: 20),
 
@@ -315,8 +347,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ── Badges section ────────────────────────────────────────────────────────
+  // ── Mascote + bolha no topo do perfil ─────────────────────────────────────
+  Widget _buildMascotSection() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      decoration: BoxDecoration(
+        color: _kSurf,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          StrkMascot(mood: _mood, size: 72),
+          const SizedBox(width: 14),
+          Expanded(
+            child: MascotBubble(mood: _mood, customMessage: _moodMessage),
+          ),
+        ],
+      ),
+    );
+  }
 
+  // ── Badges section ────────────────────────────────────────────────────────
   Widget _buildBadgesSection(
     List<HabitBadge> unlockedBadges,
     int unlockedCount,
@@ -332,7 +383,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -374,7 +424,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ],
               ),
-              // Trophy icon com contagem
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
@@ -411,8 +460,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
           const SizedBox(height: 16),
-
-          // Barra de progresso
           ClipRRect(
             borderRadius: BorderRadius.circular(99),
             child: LinearProgressIndicator(
@@ -423,11 +470,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 20),
-
-          // Grelha estilo GitHub — todos os badges (desbloqueados + bloqueados)
           _buildBadgeGrid(allBadges),
-
-          // Legenda dos últimos desbloqueados
           if (unlockedBadges.isNotEmpty) ...[
             const SizedBox(height: 20),
             const Text(
@@ -447,7 +490,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  /// Grelha compacta estilo GitHub — um círculo por badge
   Widget _buildBadgeGrid(List<HabitBadge> badges) {
     const iconSize = 36.0;
     const spacing = 8.0;
@@ -486,7 +528,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  /// Os 3 badges mais recentemente desbloqueados (últimos da lista)
   Widget _buildRecentBadges(List<HabitBadge> unlocked) {
     final recent = unlocked.reversed.take(3).toList();
     return Row(
@@ -527,7 +568,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // ── Profile card ──────────────────────────────────────────────────────────
-
   Widget _buildProfileCard(String name, String email, String? photo) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -643,7 +683,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // ── Section / Tile ────────────────────────────────────────────────────────
-
   Widget _buildSection(String title, List<Widget> tiles) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -721,7 +760,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // ── Dialogs ───────────────────────────────────────────────────────────────
-
   void _editName(BuildContext context) {
     final controller = TextEditingController(text: _user?.displayName ?? '');
     showDialog(

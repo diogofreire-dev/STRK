@@ -1,0 +1,503 @@
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+.lp{font-family:'Inter',sans-serif;background:#0A0A0A;color:#E8E8E8;overflow-x:hidden;}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:0.5px solid rgba(255,255,255,0.06);background:rgba(10,10,10,0.95);position:sticky;top:0;z-index:100;}
+.nav-logo{display:flex;align-items:center;gap:8px;}
+.nav-bars{display:flex;align-items:flex-end;gap:2px;height:18px;}
+.b{border-radius:2px;background:#E8E8E8;}
+.b1{width:4px;height:7px;}.b2{width:4px;height:11px;}.b3{width:4px;height:18px;background:#FF6B00;}
+.nav-name{font-size:17px;font-weight:900;letter-spacing:-0.5px;}
+.nav-btn{background:#FF6B00;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
+
+.hero{padding:clamp(48px,8vw,96px) clamp(20px,5vw,60px) clamp(40px,6vw,64px);text-align:center;position:relative;overflow:hidden;}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:2px;color:#FF6B00;text-transform:uppercase;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:8px;}
+.eyebrow::before,.eyebrow::after{content:'';width:20px;height:1px;background:#FF6B00;opacity:.5;}
+.hero h1{font-size:clamp(40px,10vw,88px);font-weight:900;line-height:.92;letter-spacing:clamp(-2px,-0.05em,-4px);color:#E8E8E8;margin-bottom:20px;}
+.hero h1 .acc{color:#FF6B00;}
+.hero p{font-size:clamp(14px,2.5vw,17px);color:rgba(232,232,232,.45);max-width:420px;line-height:1.6;margin:0 auto 36px;}
+.hero-btns{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;margin-bottom:52px;}
+.btn-p{display:flex;align-items:center;gap:7px;background:#FF6B00;color:#fff;border:none;padding:clamp(11px,2vw,14px) clamp(18px,3vw,28px);border-radius:10px;font-size:clamp(13px,2vw,15px);font-weight:700;cursor:pointer;}
+.btn-s{background:transparent;color:rgba(232,232,232,.5);border:0.5px solid rgba(255,255,255,.12);padding:clamp(11px,2vw,14px) clamp(18px,3vw,28px);border-radius:10px;font-size:clamp(13px,2vw,15px);font-weight:600;cursor:pointer;}
+
+.ticker-wrap{width:100%;overflow:hidden;mask-image:linear-gradient(90deg,transparent,black 8%,black 92%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,black 8%,black 92%,transparent);}
+.ticker{display:flex;gap:10px;width:max-content;animation:tick 26s linear infinite;}
+@keyframes tick{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.ti{display:flex;align-items:center;gap:7px;background:#161616;border:0.5px solid rgba(255,255,255,.07);border-radius:7px;padding:9px 14px;white-space:nowrap;flex-shrink:0;}
+.td{width:5px;height:5px;border-radius:50%;background:#FF6B00;}
+.tt{font-size:11px;color:rgba(232,232,232,.45);}
+.tv{font-size:12px;font-weight:700;color:#FF6B00;}
+
+.divider{height:0.5px;background:rgba(255,255,255,.06);margin:0 20px;}
+.sec-lbl{font-size:11px;font-weight:700;letter-spacing:2px;color:rgba(232,232,232,.25);text-transform:uppercase;text-align:center;margin-bottom:clamp(24px,4vw,40px);}
+
+/* ── PHONES SECTION ── */
+.phones-sec{padding:clamp(40px,6vw,72px) 0;}
+.phones-sec .sec-lbl{padding:0 20px;}
+
+.phones-subtitle{text-align:center;font-size:clamp(22px,4vw,36px);font-weight:900;letter-spacing:-1px;color:#E8E8E8;margin-bottom:clamp(32px,5vw,56px);padding:0 20px;}
+.phones-subtitle span{color:#FF6B00;}
+
+/* Desktop: flex row centrado */
+.phones-track-outer{
+  display:flex;
+  justify-content:center;
+  padding:0 40px 24px;
+  gap:24px;
+  overflow:visible;
+}
+
+/* Mobile: scroll horizontal */
+@media(max-width:700px){
+  .phones-track-outer{
+    overflow-x:scroll;
+    overflow-y:visible;
+    justify-content:flex-start;
+    padding:0 20px 24px;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+    gap:16px;
+  }
+  .phones-track-outer::-webkit-scrollbar{display:none;}
+}
+
+/* dots indicator — só visível em mobile */
+.dots{display:none;justify-content:center;gap:6px;padding-bottom:8px;}
+@media(max-width:700px){.dots{display:flex;}}
+.dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.15);transition:background .2s;}
+.dot.active{background:#FF6B00;width:18px;border-radius:3px;}
+
+/* ── PHONE FRAME ── */
+.phone{
+  width:230px;
+  flex-shrink:0;
+  background:#111;
+  border-radius:36px;
+  border:1.5px solid rgba(255,255,255,.1);
+  padding:16px 13px 20px;
+  scroll-snap-align:center;
+  position:relative;
+  transition:transform .3s;
+}
+.phone:hover{transform:translateY(-6px);}
+.phone-label{
+  text-align:center;
+  margin-top:14px;
+  font-size:12px;
+  font-weight:700;
+  color:rgba(232,232,232,.3);
+  letter-spacing:.5px;
+}
+
+.notch{width:70px;height:17px;background:#0A0A0A;border-radius:0 0 12px 12px;margin:0 auto 12px;}
+
+/* shared phone ui */
+.ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:11px;}
+.plogo{font-size:12px;font-weight:900;letter-spacing:-.5px;}
+.pgreet{font-size:7px;color:rgba(232,232,232,.3);margin-top:1px;}
+.pav{width:24px;height:24px;border-radius:50%;background:#2C2C2C;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#FF6B00;}
+.plbl{font-size:7px;font-weight:700;color:rgba(232,232,232,.3);letter-spacing:.8px;margin-bottom:6px;}
+
+/* progress card */
+.pc{background:linear-gradient(135deg,#FF3B00,#FF6B00,#FFB300);border-radius:11px;padding:11px;margin-bottom:11px;}
+.ptoday{font-size:7px;font-weight:700;color:rgba(255,255,255,.55);letter-spacing:1.2px;margin-bottom:4px;}
+.pnum{font-size:26px;font-weight:900;color:#fff;letter-spacing:-2px;line-height:1;}
+.pnum span{font-size:13px;color:rgba(255,255,255,.5);}
+.ppct{font-size:8px;color:rgba(255,255,255,.7);margin-top:2px;}
+.pbb{height:3px;background:rgba(255,255,255,.25);border-radius:99px;margin-top:8px;}
+.pbf{height:3px;background:#fff;border-radius:99px;}
+
+/* habit row */
+.ph2{display:flex;align-items:center;gap:7px;background:#1A1A1A;border-radius:9px;padding:7px 8px;margin-bottom:5px;}
+.pi{width:24px;height:24px;background:#252525;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.pinfo{flex:1;min-width:0;}
+.pname{font-size:8.5px;font-weight:600;color:#E8E8E8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pst{font-size:7px;color:rgba(232,232,232,.3);margin-top:1px;}
+.pst b{color:#FF6B00;}
+.pchk{width:15px;height:15px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.done-c{background:#FF6B00;}
+.todo-c{border:1.5px solid rgba(255,255,255,.15);}
+
+/* calendar screen */
+.cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.cal-month{font-size:11px;font-weight:800;color:#E8E8E8;}
+.cal-nav{display:flex;gap:4px;}
+.cal-arrow{width:18px;height:18px;background:#1A1A1A;border-radius:5px;display:flex;align-items:center;justify-content:center;}
+.cal-days-header{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px;}
+.cal-day-lbl{font-size:7px;color:rgba(232,232,232,.25);text-align:center;font-weight:600;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cal-cell{aspect-ratio:1;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:7px;color:rgba(232,232,232,.4);}
+.cal-cell.done{background:#FF6B00;color:white;font-weight:700;}
+.cal-cell.today{background:#2A1A00;color:#FF6B00;font-weight:700;border:1px solid #FF6B00;}
+.cal-cell.empty{background:transparent;}
+.cal-streak-card{background:#1A1A1A;border-radius:9px;padding:9px;margin-top:8px;display:flex;align-items:center;gap:8px;}
+.cal-streak-icon{font-size:16px;}
+.cal-streak-text{font-size:8px;color:rgba(232,232,232,.4);}
+.cal-streak-num{font-size:15px;font-weight:900;color:#FF6B00;letter-spacing:-1px;}
+
+/* badges screen */
+.badges-title{font-size:13px;font-weight:900;color:#E8E8E8;letter-spacing:-.5px;margin-bottom:3px;}
+.badges-sub{font-size:8px;color:rgba(232,232,232,.35);margin-bottom:10px;}
+.bdg-progress{height:3px;background:rgba(255,255,255,.08);border-radius:99px;margin-bottom:12px;}
+.bdg-fill{height:3px;background:#FF6B00;border-radius:99px;width:40%;}
+.bdg-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+.bdg-item{aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;}
+.bdg-item.locked{background:rgba(255,255,255,.04);border:0.5px solid rgba(255,255,255,.07);}
+.bdg-item.unlocked{border:0.5px solid rgba(255,107,0,.3);}
+
+/* mascote screen */
+.mascote-screen{display:flex;flex-direction:column;align-items:center;padding:8px 0 4px;}
+@keyframes flicker{0%,100%{transform:scaleX(1) scaleY(1)}25%{transform:scaleX(.96) scaleY(1.04)}75%{transform:scaleX(1.04) scaleY(.97)}}
+.flg{animation:flicker 1.8s ease-in-out infinite;transform-origin:center bottom;}
+.m-bubble{background:#1A1A1A;border:0.5px solid rgba(255,255,255,.08);border-radius:10px;padding:8px 10px;font-size:8px;color:rgba(232,232,232,.55);line-height:1.5;margin-top:10px;text-align:center;}
+.m-bubble b{color:#FF6B00;}
+.m-streak-row{display:flex;gap:6px;margin-top:8px;width:100%;}
+.m-badge{flex:1;background:#1A1A1A;border-radius:8px;padding:7px 6px;text-align:center;}
+.m-badge-num{font-size:14px;font-weight:900;color:#FF6B00;letter-spacing:-1px;}
+.m-badge-lbl{font-size:6.5px;color:rgba(232,232,232,.3);margin-top:1px;}
+
+/* features */
+.feats{padding:clamp(32px,5vw,56px) clamp(16px,4vw,40px) clamp(40px,6vw,72px);max-width:700px;margin:0 auto;}
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:10px;}
+.fc{background:#111;border:0.5px solid rgba(255,255,255,.07);border-radius:14px;padding:clamp(18px,3vw,24px);}
+.fc.wide{grid-column:1/-1;}
+.fi{width:34px;height:34px;background:rgba(255,107,0,.1);border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;}
+.ft{font-size:clamp(13px,2vw,15px);font-weight:700;color:#E8E8E8;margin-bottom:5px;letter-spacing:-.3px;}
+.fd{font-size:clamp(12px,1.8vw,13px);color:rgba(232,232,232,.38);line-height:1.55;}
+.hm{display:flex;gap:3px;overflow-x:hidden;justify-content:center;margin-top:14px;}
+.hmc{display:flex;flex-direction:column;gap:3px;}
+.hmcell{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+
+/* mascot section */
+.mascot-sec{padding:clamp(32px,5vw,56px) 20px clamp(40px,6vw,72px);text-align:center;}
+.mcard{background:#111;border:0.5px solid rgba(255,255,255,.07);border-radius:18px;padding:clamp(28px,4vw,40px) clamp(20px,4vw,32px);max-width:480px;margin:0 auto;}
+.bubble{display:inline-block;background:#1A1A1A;border:0.5px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 18px;font-size:clamp(12px,2vw,14px);color:rgba(232,232,232,.6);line-height:1.5;margin-top:16px;}
+.bubble b{color:#FF6B00;}
+
+/* stats */
+.stats{padding:clamp(28px,4vw,48px) 20px clamp(40px,6vw,72px);text-align:center;}
+.stat-row{display:flex;justify-content:center;gap:clamp(24px,5vw,56px);flex-wrap:wrap;}
+.snum{font-size:clamp(28px,6vw,38px);font-weight:900;color:#E8E8E8;letter-spacing:-2px;}
+.snum span{color:#FF6B00;}
+.slbl{font-size:11px;color:rgba(232,232,232,.3);margin-top:3px;}
+
+/* footer */
+.ftcta{padding:clamp(44px,7vw,72px) clamp(20px,4vw,40px) clamp(52px,8vw,88px);text-align:center;border-top:0.5px solid rgba(255,255,255,.06);}
+.ftcta h2{font-size:clamp(28px,7vw,54px);font-weight:900;letter-spacing:-2px;color:#E8E8E8;line-height:1;margin-bottom:14px;}
+.ftcta p{font-size:clamp(13px,2vw,15px);color:rgba(232,232,232,.3);margin-bottom:28px;}
+.store-badges{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:32px;}
+.sbdg{display:flex;align-items:center;gap:9px;background:#161616;border:0.5px solid rgba(255,255,255,.1);border-radius:10px;padding:clamp(10px,2vw,13px) clamp(14px,3vw,20px);cursor:pointer;}
+.sbdg:hover{border-color:rgba(255,107,0,.4);}
+.bsmall{font-size:9px;color:rgba(232,232,232,.3);}
+.bbig{font-size:clamp(13px,2vw,15px);font-weight:700;color:#E8E8E8;}
+.fnote{font-size:11px;color:rgba(232,232,232,.2);}
+
+.scroll-hint{display:flex;flex-direction:column;align-items:center;gap:5px;opacity:.2;animation:bounce 2s infinite;margin-top:clamp(32px,5vw,44px);}
+.scroll-hint span{font-size:10px;letter-spacing:1px;}
+.sarrow{width:10px;height:10px;border-right:1.5px solid #E8E8E8;border-bottom:1.5px solid #E8E8E8;transform:rotate(45deg);}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
+</style>
+
+<div class="lp">
+
+<nav class="nav">
+  <div class="nav-logo">
+    <div class="nav-bars"><div class="b b1"></div><div class="b b2"></div><div class="b b3"></div></div>
+    <span class="nav-name">strk</span>
+  </div>
+  <button class="nav-btn">Notifica-me 🔥</button>
+</nav>
+
+<section class="hero">
+  <div class="eyebrow">Em breve · iOS & Android</div>
+  <h1>Não quebres<br>a <span class="acc">sequência.</span></h1>
+  <p>Strk ajuda-te a construir hábitos que duram. Acompanha o teu progresso, mantém a chama acesa.</p>
+  <div class="hero-btns">
+    <button class="btn-p">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+      Entrar na lista de espera
+    </button>
+    <button class="btn-s">Ver como funciona ↓</button>
+  </div>
+  <div class="ticker-wrap"><div class="ticker" id="ticker"></div></div>
+  <div class="scroll-hint"><span>SCROLL</span><div class="sarrow"></div></div>
+</section>
+
+<div class="divider"></div>
+
+<!-- PHONES SECTION -->
+<section class="phones-sec">
+  <div class="sec-lbl">A app em detalhe</div>
+  <div class="phones-subtitle">Tudo o que precisas,<br><span>numa só app.</span></div>
+
+  <div class="phones-track-outer" id="phoneTrack">
+
+    <!-- PHONE 1: Hoje -->
+    <div class="phone" id="p0">
+      <div class="notch"></div>
+      <div class="ph">
+        <div><div class="plogo">strk</div><div class="pgreet">Boa tarde, Freire 👋</div></div>
+        <div class="pav">F</div>
+      </div>
+      <div class="pc">
+        <div class="ptoday">HOJE</div>
+        <div class="pnum">3<span>/4</span></div>
+        <div class="ppct">75% feito</div>
+        <div class="pbb"><div class="pbf" style="width:75%"></div></div>
+      </div>
+      <div class="plbl">OS TEUS HÁBITOS</div>
+      <div class="ph2" style="border:0.5px solid rgba(255,107,0,.3)">
+        <div class="pi"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#FF6B00" stroke-width="2" stroke-linecap="round"><path d="M12 22a10 10 0 0 0 0-20c0 5-2 8-6 10 4 0 6 3 6 10z"/></svg></div>
+        <div class="pinfo"><div class="pname">Beber água</div><div class="pst"><b>12 dias</b> seguidos</div></div>
+        <div class="pchk done-c"><svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6l3 3 5-5"/></svg></div>
+      </div>
+      <div class="ph2" style="border:0.5px solid rgba(255,107,0,.3)">
+        <div class="pi"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#FF6B00" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/></svg></div>
+        <div class="pinfo"><div class="pname">Meditação</div><div class="pst"><b>7 dias</b> seguidos</div></div>
+        <div class="pchk done-c"><svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6l3 3 5-5"/></svg></div>
+      </div>
+      <div class="ph2" style="border:0.5px solid rgba(255,107,0,.3)">
+        <div class="pi"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#FF6B00" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+        <div class="pinfo"><div class="pname">Exercício</div><div class="pst"><b>5 dias</b> seguidos</div></div>
+        <div class="pchk done-c"><svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6l3 3 5-5"/></svg></div>
+      </div>
+      <div class="ph2">
+        <div class="pi"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(232,232,232,.25)" stroke-width="2" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
+        <div class="pinfo"><div class="pname" style="color:rgba(232,232,232,.35)">Leitura</div><div class="pst">3 dias seguidos</div></div>
+        <div class="pchk todo-c"></div>
+      </div>
+      <div class="phone-label">Hoje</div>
+    </div>
+
+    <!-- PHONE 2: Calendário -->
+    <div class="phone" id="p1">
+      <div class="notch"></div>
+      <div class="ph">
+        <div><div class="plogo">strk</div><div class="pgreet">Calendário</div></div>
+        <div class="pav">F</div>
+      </div>
+      <div class="cal-header">
+        <span class="cal-month">Junho 2025</span>
+        <div class="cal-nav">
+          <div class="cal-arrow"><svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="#E8E8E8" stroke-width="2" stroke-linecap="round"><path d="M8 2L4 6l4 4"/></svg></div>
+          <div class="cal-arrow"><svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="#E8E8E8" stroke-width="2" stroke-linecap="round"><path d="M4 2l4 4-4 4"/></svg></div>
+        </div>
+      </div>
+      <div class="cal-days-header">
+        <div class="cal-day-lbl">S</div><div class="cal-day-lbl">T</div><div class="cal-day-lbl">Q</div>
+        <div class="cal-day-lbl">Q</div><div class="cal-day-lbl">S</div><div class="cal-day-lbl">S</div><div class="cal-day-lbl">D</div>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+      <div class="cal-streak-card">
+        <div class="cal-streak-icon">🔥</div>
+        <div>
+          <div class="cal-streak-num">12</div>
+          <div class="cal-streak-text">dias seguidos este mês</div>
+        </div>
+        <div style="margin-left:auto;text-align:right">
+          <div style="font-size:11px;font-weight:700;color:#FF6B00">85%</div>
+          <div class="cal-streak-text">taxa mensal</div>
+        </div>
+      </div>
+      <div class="phone-label">Calendário</div>
+    </div>
+
+    <!-- PHONE 3: Conquistas -->
+    <div class="phone" id="p2">
+      <div class="notch"></div>
+      <div class="ph">
+        <div><div class="plogo">strk</div><div class="pgreet">Conquistas</div></div>
+        <div class="pav">F</div>
+      </div>
+      <div class="badges-title">10/25 conquistas</div>
+      <div class="badges-sub">Continua assim para desbloquear todas!</div>
+      <div class="bdg-progress"><div class="bdg-fill"></div></div>
+      <div class="bdg-grid" id="bdgGrid"></div>
+      <div style="margin-top:10px;background:#1A1A1A;border-radius:9px;padding:8px 10px;display:flex;align-items:center;gap:8px;">
+        <div style="width:28px;height:28px;background:rgba(255,107,0,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px">🏆</div>
+        <div>
+          <div style="font-size:8.5px;font-weight:700;color:#E8E8E8">Uma Semana</div>
+          <div style="font-size:7px;color:rgba(232,232,232,.35);margin-top:1px">7 dias seguidos num hábito</div>
+        </div>
+        <div style="margin-left:auto;font-size:7px;color:#FF6B00;font-weight:700">✓ Desbloqueado</div>
+      </div>
+      <div class="phone-label">Conquistas</div>
+    </div>
+
+    <!-- PHONE 4: Mascote -->
+    <div class="phone" id="p3">
+      <div class="notch"></div>
+      <div class="ph">
+        <div><div class="plogo">strk</div><div class="pgreet">A tua chama 🔥</div></div>
+        <div class="pav">F</div>
+      </div>
+      <div class="mascote-screen">
+        <svg width="80" height="96" viewBox="0 0 80 96" fill="none">
+          <g class="flg">
+            <path d="M40 90 C20 90 10 75 10 60 C10 45 18 35 22 28 C24 22 22 14 20 8 C28 14 32 22 30 30 C36 22 38 12 36 4 C46 12 50 24 48 36 C54 28 56 18 54 10 C62 20 70 34 70 50 C70 70 58 90 40 90Z" fill="#FF6B00"/>
+            <path d="M40 90 C26 90 18 80 18 68 C18 56 24 48 28 42 C30 50 28 56 32 60 C34 52 36 44 34 36 C40 44 44 56 42 66 C46 58 48 48 46 38 C54 48 58 60 58 72 C58 82 50 90 40 90Z" fill="#FFB300"/>
+            <path d="M40 84 C32 84 28 78 28 70 C28 62 32 58 34 56 C34 62 36 66 40 68 C44 66 46 62 46 56 C48 60 52 66 52 74 C52 80 46 84 40 84Z" fill="#FFE566"/>
+            <circle cx="32" cy="62" r="4.5" fill="white"/>
+            <circle cx="48" cy="62" r="4.5" fill="white"/>
+            <circle cx="33.5" cy="63" r="2.5" fill="#1A1A1A"/>
+            <circle cx="49.5" cy="63" r="2.5" fill="#1A1A1A"/>
+            <path d="M34 72 Q40 77 46 72" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <circle cx="35" cy="60" r="1.2" fill="white" opacity=".8"/>
+            <circle cx="51" cy="60" r="1.2" fill="white" opacity=".8"/>
+          </g>
+        </svg>
+        <div class="m-bubble"><b>Incrível! 12 dias seguidos 🔥</b><br>Estás a formar um hábito de verdade!</div>
+        <div class="m-streak-row">
+          <div class="m-badge"><div class="m-badge-num">12</div><div class="m-badge-lbl">Dia streak</div></div>
+          <div class="m-badge"><div class="m-badge-num">3/4</div><div class="m-badge-lbl">Hoje</div></div>
+          <div class="m-badge"><div class="m-badge-num">75%</div><div class="m-badge-lbl">Taxa</div></div>
+        </div>
+      </div>
+      <div class="phone-label">Mascote</div>
+    </div>
+
+  </div>
+
+  <!-- dots mobile -->
+  <div class="dots" id="dots">
+    <div class="dot active"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section class="feats">
+  <div class="sec-lbl">O que tens dentro</div>
+  <div class="feat-grid">
+    <div class="fc">
+      <div class="fi"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FF6B00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+      <div class="ft">Streaks em tempo real</div>
+      <div class="fd">Cada dia conta. Vê o teu progresso crescer e sente o peso de não perder a sequência.</div>
+    </div>
+    <div class="fc">
+      <div class="fi"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FF6B00" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+      <div class="ft">Heatmap de atividade</div>
+      <div class="fd">Calendário estilo GitHub. Vê meses de um relance.</div>
+      <div class="hm" id="heatmap"></div>
+    </div>
+    <div class="fc">
+      <div class="fi"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FF6B00" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg></div>
+      <div class="ft">25+ conquistas</div>
+      <div class="fd">Desde "Primeiro Passo" até "Um Ano" — cada marco celebrado.</div>
+    </div>
+    <div class="fc">
+      <div class="fi"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FF6B00" stroke-width="2" stroke-linecap="round"><path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg></div>
+      <div class="ft">Mascote animada</div>
+      <div class="fd">A tua chama reage ao teu desempenho. Celebra, encoraja, dorme.</div>
+    </div>
+    <div class="fc wide">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:20px;">
+        <div>
+          <div class="fi"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FF6B00" stroke-width="2" stroke-linecap="round"><path d="M3 15v4c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2v-4M17 9l-5 5-5-5M12 12.8V2.5"/></svg></div>
+          <div class="ft">Firebase sync</div>
+          <div class="fd">Dados na cloud. Muda de telemóvel sem perder nada.</div>
+        </div>
+        <div>
+          <div class="fi" style="background:rgba(255,179,0,.1)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FFB300" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+          <div class="ft">Lembretes diários</div>
+          <div class="fd">Notificações à hora certa para nunca esqueceres.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section class="stats">
+  <div class="sec-lbl" style="margin-bottom:32px;">Em números</div>
+  <div class="stat-row">
+    <div><div class="snum">25<span>+</span></div><div class="slbl">Conquistas para desbloquear</div></div>
+    <div><div class="snum">∞</div><div class="slbl">Hábitos que podes criar</div></div>
+    <div><div class="snum">365<span>🔥</span></div><div class="slbl">Dias. O streak máximo</div></div>
+  </div>
+</section>
+
+<section class="ftcta">
+  <h2>A chama<br>começa hoje.</h2>
+  <p>Sê dos primeiros a experimentar o Strk.</p>
+  <div class="store-badges">
+    <div class="sbdg">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="#E8E8E8"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+      <div><div class="bsmall">Em breve na</div><div class="bbig">App Store</div></div>
+    </div>
+    <div class="sbdg">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="#E8E8E8"><path d="M3.18 23.76c.3.17.64.24.99.19l12.6-12.6L13.09 7.7 3.18 23.76zm17.64-9.87l-3.2-1.83-3.63 3.63 3.63 3.63 3.23-1.85c.92-.53.92-1.06-.03-1.58zM3 1.05c-.06.14-.1.3-.1.47v20.96c0 .17.04.33.1.47l.12.11L16.44 12 3.12.94 3 1.05zm10.09 10.95L3 1.05l.12-.11 10.58 10.58-1.03 1.06-1.58-1.58v2.08l1.58-1.58 1.03 1.05L3 23.95l-.12-.11L13.09 12 12 10.9l1.09 1.1z"/></svg>
+      <div><div class="bsmall">Em breve no</div><div class="bbig">Google Play</div></div>
+    </div>
+  </div>
+  <p class="fnote">strk · feito com 🔥 em Portugal</p>
+</section>
+
+</div>
+
+<script>
+const tItems=[
+  {l:'Streak mais longo',v:'365 dias 🔥'},{l:'Hábitos criados',v:'+12.4k'},
+  {l:'Dias perfeitos',v:'+3.2k'},{l:'Conquistas ganhas',v:'+28k'},
+  {l:'Streak ativo',v:'142 dias'},{l:'Taxa de conclusão',v:'78%'},
+  {l:'Lembretes enviados',v:'+45k'},{l:'Utilizadores ativos',v:'2.1k'},
+];
+const t=document.getElementById('ticker');
+[...tItems,...tItems].forEach(i=>{
+  const d=document.createElement('div');d.className='ti';
+  d.innerHTML=`<div class="td"></div><span class="tt">${i.l}</span><span class="tv">${i.v}</span>`;
+  t.appendChild(d);
+});
+
+const calGrid=document.getElementById('calGrid');
+const doneDays=[1,2,3,4,5,8,9,10,11,12,15,16,17,18,19,22,23,24,25];
+const offset=6;
+for(let i=0;i<offset;i++){const c=document.createElement('div');c.className='cal-cell empty';calGrid.appendChild(c);}
+for(let d=1;d<=30;d++){
+  const c=document.createElement('div');
+  if(d===8){c.className='cal-cell today';c.textContent=d;}
+  else if(doneDays.includes(d)){c.className='cal-cell done';c.textContent=d;}
+  else{c.className='cal-cell';c.textContent=d;}
+  calGrid.appendChild(c);
+}
+
+const bdgGrid=document.getElementById('bdgGrid');
+const bdgData=[
+  {e:'🚩',u:true},{e:'⚡',u:true},{e:'🔥',u:true},{e:'📅',u:true},{e:'🏅',u:true},
+  {e:'💎',u:true},{e:'🌙',u:false},{e:'⭐',u:false},{e:'🛡',u:false},{e:'🏆',u:false},
+  {e:'🌟',u:false},{e:'💪',u:false},{e:'🎯',u:false},{e:'🔔',u:false},{e:'👑',u:false},
+];
+bdgData.forEach(b=>{
+  const el=document.createElement('div');
+  el.className=`bdg-item ${b.u?'unlocked':'locked'}`;
+  if(b.u){el.style.background=`rgba(255,107,0,.1)`;el.textContent=b.e;}
+  else{el.innerHTML=`<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(232,232,232,.2)" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;}
+  bdgGrid.appendChild(el);
+});
+
+const hm=document.getElementById('heatmap');
+for(let w=0;w<18;w++){
+  const col=document.createElement('div');col.className='hmc';
+  for(let d=0;d<7;d++){
+    const c=document.createElement('div');c.className='hmcell';
+    const r=Math.random();
+    if(r<0.28){c.style.background='rgba(255,255,255,0.07)';}
+    else{const t2=Math.random();c.style.background=`rgba(255,${Math.round(107+t2*72)},0,${(0.3+t2*0.7).toFixed(2)})`;}
+    col.appendChild(c);
+  }
+  hm.appendChild(col);
+}
+
+const track=document.getElementById('phoneTrack');
+const dotsEl=document.querySelectorAll('.dot');
+track.addEventListener('scroll',()=>{
+  const idx=Math.round(track.scrollLeft/(230+16));
+  dotsEl.forEach((d,i)=>d.classList.toggle('active',i===idx));
+});
+</script>
