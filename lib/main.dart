@@ -15,7 +15,6 @@ import 'calendar_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'badges_screen.dart';
 import 'strk_header.dart';
-import 'strk_mascot.dart';
 
 const kFlameOrange = Color(0xFFFF6B00);
 const kFlameAmber = Color(0xFFFFB300);
@@ -194,34 +193,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   int get completedCount => habits.where((h) => h.completedToday).length;
 
-  MascotMood get _mascotMood {
-    if (habits.isEmpty) return MascotMood.idle;
-    final allDone = habits.every((h) => h.completedToday);
-    if (allDone) return MascotMood.celebrating;
-    final anyAtRisk = habits.any((h) => h.streak > 0 && !h.completedToday);
-    if (anyAtRisk) return MascotMood.encouraging;
-    return MascotMood.idle;
-  }
-
-  String get _mascotMessage {
-    final name = _user?.displayName?.split(' ').first ?? 'campeão';
-    switch (_mascotMood) {
-      case MascotMood.celebrating:
-        return 'Perfeito, $name! Todos os hábitos feitos 🔥';
-      case MascotMood.encouraging:
-        final remaining = habits.where((h) => !h.completedToday).length;
-        return 'Ainda faltam $remaining hábito${remaining > 1 ? 's' : ''} — vai lá! 💪';
-      case MascotMood.idle:
-        final best = habits.isEmpty
-            ? 0
-            : habits.map((h) => h.streak).reduce((a, b) => a > b ? a : b);
-        if (best > 0) return 'Streak de $best dias — mantém o ritmo!';
-        return 'Pronto para começar o dia? 🔥';
-      case MascotMood.sleeping:
-        return 'Está na hora de voltar... 😴';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -248,7 +219,6 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHomeHeader(),
-              _buildMascotSection(),
               _buildProgressCard(),
               _buildHabitsList(),
             ],
@@ -311,30 +281,6 @@ class _HomeScreenState extends State<HomeScreen> {
       default:
         return ProfileScreen(habits: habits);
     }
-  }
-
-  // ── Mascote section — tamanho 160, só no ecrã Hoje ───────────────────────
-
-  Widget _buildMascotSection() {
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 400),
-      child: Padding(
-        key: ValueKey(_mascotMood),
-        padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
-        child: Row(
-          children: [
-            StrkMascot(mood: _mascotMood, size: 160),
-            const SizedBox(width: 14),
-            Expanded(
-              child: MascotBubble(
-                mood: _mascotMood,
-                customMessage: _mascotMessage,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   // ── Home header ───────────────────────────────────────────────────────────

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'habit.dart';
-import 'strk_mascot.dart'; // ← novo
 
 const _kOrange = Color(0xFFFF6B00);
 const _kAmber = Color(0xFFFFB300);
@@ -12,25 +11,6 @@ const _kText = Color(0xFFE8E8E8);
 class StatsScreen extends StatelessWidget {
   final List<Habit> habits;
   const StatsScreen({super.key, required this.habits});
-
-  // ── Mood baseado nas estatísticas ─────────────────────────────────────────
-  MascotMood get _mood {
-    if (habits.isEmpty) return MascotMood.idle;
-    final allDone = habits.every((h) => h.completedToday);
-    if (allDone) return MascotMood.celebrating;
-    final anyAtRisk = habits.any((h) => h.streak > 0 && !h.completedToday);
-    if (anyAtRisk) return MascotMood.encouraging;
-    return MascotMood.idle;
-  }
-
-  String get _moodMessage {
-    if (habits.isEmpty) return 'Cria o teu primeiro hábito! 🔥';
-    final completed = habits.where((h) => h.completedToday).length;
-    final total = habits.length;
-    if (completed == total) return 'Dia perfeito! $completed/$total feitos 🎉';
-    if (completed == 0) return 'Ainda não começaste — vai lá! 💪';
-    return '$completed de $total hábitos feitos hoje';
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,11 +33,6 @@ class StatsScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 8),
-
-              // ── Mascote centrada com bolha ──────────────────────────────
-              _buildMascotRow(),
-              const SizedBox(height: 20),
-
               _buildTodayCard(completed, total, progress),
               const SizedBox(height: 16),
               _buildStatsGrid(bestStreak, avgStreak),
@@ -73,19 +48,6 @@ class StatsScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-
-  // ── Mascote + bolha em linha ──────────────────────────────────────────────
-  Widget _buildMascotRow() {
-    return Row(
-      children: [
-        StrkMascot(mood: _mood, size: 64),
-        const SizedBox(width: 14),
-        Expanded(
-          child: MascotBubble(mood: _mood, customMessage: _moodMessage),
-        ),
-      ],
     );
   }
 
