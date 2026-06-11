@@ -6,11 +6,9 @@ import 'package:image_picker/image_picker.dart';
 import 'profile_service.dart';
 import 'badges_screen.dart';
 import 'habit.dart';
-
-const _kOrange = Color(0xFFFF6B00);
-const _kBg = Color(0xFF0D0D0D);
-const _kSurf = Color(0xFF1A1A1A);
-const _kText = Color(0xFFE8E8E8);
+import 'habit_service.dart';
+import 'theme_provider.dart';
+import 'theme_settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final List<Habit> habits;
@@ -24,11 +22,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   User? _user;
   String? _photoUrl;
   bool _isUploading = false;
+  DateTime? _birthday;
 
   @override
   void initState() {
     super.initState();
     _refreshUser();
+    _birthday = HabitService.cachedBirthday;
   }
 
   Future<void> _refreshUser() async {
@@ -41,6 +41,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _photoUrl = refreshed?.photoURL;
     });
   }
+
+  // ── Photo ──────────────────────────────────────────────────────────────────
 
   Future<void> _pickProfilePhoto(ImageSource source) async {
     final file = await ProfileService.pickProfilePhoto(source: source);
@@ -60,121 +62,67 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  Future<ImageSource?> _showPhotoSourceDialog() =>
-      showModalBottomSheet<ImageSource>(
-        context: context,
-        backgroundColor: const Color(0xFF121212),
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        builder: (ctx) => SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 16),
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.white12,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 20),
-              if (!kIsWeb)
-                ListTile(
-                  leading: const Icon(
-                    Icons.photo_camera_rounded,
-                    color: _kOrange,
-                  ),
-                  title: const Text('Câmara'),
-                  onTap: () => Navigator.pop(ctx, ImageSource.camera),
-                ),
-              ListTile(
-                leading: const Icon(
-                  Icons.photo_library_rounded,
-                  color: _kOrange,
-                ),
-                title: const Text('Galeria'),
-                onTap: () => Navigator.pop(ctx, ImageSource.gallery),
-              ),
-              const SizedBox(height: 16),
-            ],
+  Future<ImageSource?> _showPhotoSourceDialog(
+    ThemeProvider theme,
+  ) => showModalBottomSheet<ImageSource>(
+    context: context,
+    backgroundColor: theme.surface,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (ctx) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 16),
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.white12,
+              borderRadius: BorderRadius.circular(2),
+            ),
           ),
-        ),
-      );
+          const SizedBox(height: 20),
+          if (!kIsWeb)
+            ListTile(
+              leading: Icon(Icons.photo_camera_rounded, color: theme.accent),
+              title: Text('Câmara', style: TextStyle(color: theme.textPrimary)),
+              onTap: () => Navigator.pop(ctx, ImageSource.camera),
+            ),
+          ListTile(
+            leading: Icon(Icons.photo_library_rounded, color: theme.accent),
+            title: Text('Galeria', style: TextStyle(color: theme.textPrimary)),
+            onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
+    ),
+  );
 
   void _showMessage(String msg, {bool isError = false}) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(msg),
-        backgroundColor: isError ? const Color(0xFFFF3B30) : _kSurf,
+        backgroundColor: isError
+            ? const Color(0xFFFF3B30)
+            : const Color(0xFF1A1A1A),
       ),
     );
   }
 
-  Future<void> _confirmRemovePhoto() async {
+  Future<void> _confirmRemovePhoto(ThemeProvider theme) async {
     final confirmed =
-        await showDialog<bool>(
-          context: context,
-          builder: (ctx) => Dialog(
-            backgroundColor: _kSurf,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    'Remover foto de perfil?',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: _kText,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'A foto será removida do teu perfil e da cloud.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 14, color: Color(0xFFBEBEBE)),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => Navigator.pop(ctx, false),
-                          child: _dialogBtn(
-                            'Cancelar',
-                            const Color(0xFF2C2C2C),
-                            const Color(0xFF888888),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => Navigator.pop(ctx, true),
-                          child: _dialogBtn(
-                            'Remover',
-                            const Color(0xFFFF3B30),
-                            Colors.white,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
+        await _showConfirmDialog(
+          theme,
+          title: 'Remover foto de perfil?',
+          body: 'A foto será removida do teu perfil e da cloud.',
+          confirmLabel: 'Remover',
+          confirmColor: const Color(0xFFFF3B30),
         ) ??
         false;
-
     if (!confirmed) return;
     setState(() => _isUploading = true);
     try {
@@ -189,6 +137,115 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  // ── Birthday ───────────────────────────────────────────────────────────────
+
+  Future<void> _pickBirthday(ThemeProvider theme) async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _birthday ?? DateTime(now.year - 25),
+      firstDate: DateTime(1920),
+      lastDate: DateTime(now.year - 5),
+      helpText: 'Data de nascimento',
+      builder: (ctx, child) => Theme(
+        data: Theme.of(ctx).copyWith(
+          colorScheme: ColorScheme.dark(
+            primary: theme.accent,
+            onPrimary: Colors.white,
+            surface: theme.surface,
+            onSurface: theme.textPrimary,
+          ),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked == null) return;
+    await HabitService.saveBirthday(picked);
+    if (mounted) setState(() => _birthday = picked);
+    _showMessage('Data de nascimento guardada!');
+  }
+
+  Future<void> _removeBirthday(ThemeProvider theme) async {
+    final confirmed =
+        await _showConfirmDialog(
+          theme,
+          title: 'Remover data de nascimento?',
+          body: 'Deixarás de receber a mensagem de aniversário.',
+          confirmLabel: 'Remover',
+          confirmColor: const Color(0xFFFF3B30),
+        ) ??
+        false;
+    if (!confirmed) return;
+    await HabitService.removeBirthday();
+    if (mounted) setState(() => _birthday = null);
+    _showMessage('Data removida.');
+  }
+
+  // ── Generic confirm dialog ─────────────────────────────────────────────────
+
+  Future<bool?> _showConfirmDialog(
+    ThemeProvider theme, {
+    required String title,
+    required String body,
+    required String confirmLabel,
+    required Color confirmColor,
+  }) => showDialog<bool>(
+    context: context,
+    builder: (ctx) => Dialog(
+      backgroundColor: theme.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: theme.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              body,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: theme.textPrimary.withValues(alpha: 0.5),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(ctx, false),
+                    child: _dialogBtn(
+                      'Cancelar',
+                      theme.isLight
+                          ? const Color(0xFFE8E8E8)
+                          : const Color(0xFF2C2C2C),
+                      const Color(0xFF888888),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(ctx, true),
+                    child: _dialogBtn(confirmLabel, confirmColor, Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+
   Widget _dialogBtn(String label, Color bg, Color fg) => Container(
     padding: const EdgeInsets.symmetric(vertical: 12),
     decoration: BoxDecoration(
@@ -202,8 +259,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     ),
   );
 
+  // ── Build ──────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
+    final theme = ThemeProviderScope.of(context);
     final name = _user?.displayName ?? 'Sem nome';
     final email = _user?.email ?? '';
     final photo = _photoUrl;
@@ -213,8 +273,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final unlockedCount = unlockedBadges.length;
     final totalCount = badges.length;
 
+    final bdFormatted = _birthday != null
+        ? '${_birthday!.day.toString().padLeft(2, '0')}/${_birthday!.month.toString().padLeft(2, '0')}/${_birthday!.year}'
+        : null;
+
     return Scaffold(
-      backgroundColor: _kBg,
+      backgroundColor: theme.bg,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -223,17 +287,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               SvgPicture.asset('assets/images/strk_logo.svg', height: 22),
               const SizedBox(height: 20),
-              const Text(
+              Text(
                 'Perfil',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
-                  color: _kText,
+                  color: theme.textPrimary,
                   letterSpacing: -1,
                 ),
               ),
               const SizedBox(height: 20),
-              _buildProfileCard(name, email, photo),
+              _buildProfileCard(name, email, photo, theme),
               const SizedBox(height: 20),
               if (widget.habits.isNotEmpty) ...[
                 _buildBadgesSection(
@@ -241,58 +305,103 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   unlockedCount,
                   totalCount,
                   badges,
+                  theme,
                 ),
                 const SizedBox(height: 20),
               ],
-              _buildSection('Conta', [
+
+              // ── Conta ──────────────────────────────────────────────────
+              _buildSection('Conta', theme, [
                 if (photo != null)
                   _buildTile(
+                    theme: theme,
                     icon: Icons.delete_outline,
                     label: 'Remover foto',
                     value: 'Eliminar',
                     valueColor: const Color(0xFFFF3B30),
-                    onTap: _confirmRemovePhoto,
+                    onTap: () => _confirmRemovePhoto(theme),
                   ),
                 _buildTile(
+                  theme: theme,
                   icon: Icons.person_outline_rounded,
                   label: 'Nome',
                   value: name,
-                  onTap: () => _editName(context),
+                  onTap: () => _editName(context, theme),
                 ),
                 _buildTile(
+                  theme: theme,
                   icon: Icons.mail_outline_rounded,
                   label: 'Email',
                   value: email,
                 ),
                 if (_user?.emailVerified == false)
                   _buildTile(
+                    theme: theme,
                     icon: Icons.verified_outlined,
                     label: 'Email não verificado',
                     value: 'Reenviar email',
-                    valueColor: _kOrange,
+                    valueColor: theme.accent,
                     onTap: () async {
                       await _user?.sendEmailVerification();
                       if (context.mounted)
                         _showMessage('Email de verificação enviado!');
                     },
                   ),
+                _buildTile(
+                  theme: theme,
+                  icon: Icons.cake_outlined,
+                  label: 'Aniversário',
+                  value: bdFormatted ?? 'Adicionar',
+                  valueColor: bdFormatted != null ? null : theme.accent,
+                  onTap: () => _pickBirthday(theme),
+                  trailingExtra: bdFormatted != null
+                      ? GestureDetector(
+                          onTap: () => _removeBirthday(theme),
+                          child: Icon(
+                            Icons.close_rounded,
+                            size: 16,
+                            color: theme.textPrimary.withValues(alpha: 0.3),
+                          ),
+                        )
+                      : null,
+                ),
               ]),
               const SizedBox(height: 16),
-              _buildSection('Sessão', [
+
+              // ── Aparência ──────────────────────────────────────────────
+              _buildSection('Aparência', theme, [
                 _buildTile(
+                  theme: theme,
+                  icon: Icons.palette_outlined,
+                  label: 'Tema',
+                  value: _themeLabel(theme.mode),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const ThemeSettingsScreen(),
+                    ),
+                  ),
+                ),
+              ]),
+              const SizedBox(height: 16),
+
+              // ── Sessão ──────────────────────────────────────────────────
+              _buildSection('Sessão', theme, [
+                _buildTile(
+                  theme: theme,
                   icon: Icons.logout_rounded,
                   label: 'Terminar sessão',
                   valueColor: const Color(0xFFFF3B30),
-                  onTap: () => _confirmLogout(context),
+                  onTap: () => _confirmLogout(context, theme),
                 ),
               ]),
               const SizedBox(height: 32),
-              const Center(
+              Center(
                 child: Text(
                   'strk v1.0.0',
                   style: TextStyle(
                     fontSize: 11,
-                    color: Color(0x26FFFFFF),
+                    color: theme.textPrimary.withValues(alpha: 0.15),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -305,16 +414,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  String _themeLabel(StrkThemeMode mode) {
+    switch (mode) {
+      case StrkThemeMode.dark:
+        return 'Escuro';
+      case StrkThemeMode.light:
+        return 'Claro';
+      case StrkThemeMode.custom:
+        return 'Personalizado';
+    }
+  }
+
+  // ── Badges section ─────────────────────────────────────────────────────────
+
   Widget _buildBadgesSection(
     List<HabitBadge> unlockedBadges,
     int unlockedCount,
     int totalCount,
     List<HabitBadge> allBadges,
+    ThemeProvider theme,
   ) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: _kSurf,
+        color: theme.surface,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
@@ -326,12 +449,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'CONQUISTAS',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: Color(0x4DFFFFFF),
+                      color: theme.textPrimary.withValues(alpha: 0.3),
                       letterSpacing: 0.8,
                     ),
                   ),
@@ -341,19 +464,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         TextSpan(
                           text: '$unlockedCount',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w800,
-                            color: _kText,
+                            color: theme.textPrimary,
                             letterSpacing: -0.5,
                           ),
                         ),
                         TextSpan(
                           text: ' / $totalCount',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: Color(0x4DFFFFFF),
+                            color: theme.textPrimary.withValues(alpha: 0.3),
                           ),
                         ),
                       ],
@@ -367,10 +490,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: _kOrange.withValues(alpha: 0.12),
+                  color: theme.accent.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: _kOrange.withValues(alpha: 0.25),
+                    color: theme.accent.withValues(alpha: 0.25),
                     width: 1,
                   ),
                 ),
@@ -385,10 +508,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(width: 6),
                     Text(
                       '${((unlockedCount / totalCount) * 100).round()}%',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: _kOrange,
+                        color: theme.accent,
                       ),
                     ),
                   ],
@@ -403,19 +526,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
               value: totalCount == 0 ? 0 : unlockedCount / totalCount,
               minHeight: 5,
               backgroundColor: Colors.white10,
-              valueColor: const AlwaysStoppedAnimation<Color>(_kOrange),
+              valueColor: AlwaysStoppedAnimation<Color>(theme.accent),
             ),
           ),
           const SizedBox(height: 20),
-          _buildBadgeGrid(allBadges),
+          _buildBadgeGrid(allBadges, theme),
           if (unlockedBadges.isNotEmpty) ...[
             const SizedBox(height: 20),
-            const Text(
+            Text(
               'ÚLTIMAS CONQUISTAS',
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
-                color: Color(0x33FFFFFF),
+                color: theme.textPrimary.withValues(alpha: 0.2),
                 letterSpacing: 0.8,
               ),
             ),
@@ -427,7 +550,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildBadgeGrid(List<HabitBadge> badges) {
+  Widget _buildBadgeGrid(List<HabitBadge> badges, ThemeProvider theme) {
     const iconSize = 36.0;
     const spacing = 8.0;
     return Wrap(
@@ -444,11 +567,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               shape: BoxShape.circle,
               color: badge.unlocked
                   ? badge.color.withValues(alpha: 0.18)
-                  : Colors.white.withValues(alpha: 0.05),
+                  : theme.textPrimary.withValues(alpha: 0.05),
               border: Border.all(
                 color: badge.unlocked
                     ? badge.color.withValues(alpha: 0.5)
-                    : Colors.white.withValues(alpha: 0.08),
+                    : theme.textPrimary.withValues(alpha: 0.08),
                 width: 1.5,
               ),
             ),
@@ -457,7 +580,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               size: 16,
               color: badge.unlocked
                   ? badge.color
-                  : Colors.white.withValues(alpha: 0.15),
+                  : theme.textPrimary.withValues(alpha: 0.15),
             ),
           ),
         );
@@ -504,18 +627,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildProfileCard(String name, String email, String? photo) {
+  // ── Profile card ───────────────────────────────────────────────────────────
+
+  Widget _buildProfileCard(
+    String name,
+    String email,
+    String? photo,
+    ThemeProvider theme,
+  ) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: _kSurf,
+        color: theme.surface,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         children: [
           GestureDetector(
             onTap: () async {
-              final source = await _showPhotoSourceDialog();
+              final source = await _showPhotoSourceDialog(theme);
               if (source != null) await _pickProfilePhoto(source);
             },
             child: Stack(
@@ -526,7 +656,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   height: 64,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color(0xFF2C2C2C),
+                    color: theme.isLight
+                        ? const Color(0xFFE8E8E8)
+                        : const Color(0xFF2C2C2C),
                     image: photo != null
                         ? DecorationImage(
                             image: NetworkImage(photo),
@@ -538,10 +670,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ? Center(
                           child: Text(
                             name.isNotEmpty ? name[0].toUpperCase() : '?',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 26,
                               fontWeight: FontWeight.w800,
-                              color: _kOrange,
+                              color: theme.accent,
                             ),
                           ),
                         )
@@ -555,12 +687,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       color: Colors.black45,
                       shape: BoxShape.circle,
                     ),
-                    child: const Center(
+                    child: Center(
                       child: SizedBox(
                         width: 24,
                         height: 24,
                         child: CircularProgressIndicator(
-                          color: _kOrange,
+                          color: theme.accent,
                           strokeWidth: 2.5,
                         ),
                       ),
@@ -573,16 +705,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     width: 28,
                     height: 28,
                     decoration: BoxDecoration(
-                      color: _kBg,
+                      color: theme.bg,
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: _kOrange, width: 1.5),
+                      border: Border.all(color: theme.accent, width: 1.5),
                     ),
                     child: Icon(
                       _isUploading
                           ? Icons.hourglass_top_rounded
                           : Icons.photo_camera_rounded,
                       size: 16,
-                      color: _kOrange,
+                      color: theme.accent,
                     ),
                   ),
                 ),
@@ -596,18 +728,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 Text(
                   name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w700,
-                    color: _kText,
+                    color: theme.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   email,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
-                    color: Color(0x59FFFFFF),
+                    color: theme.textPrimary.withValues(alpha: 0.4),
                   ),
                 ),
               ],
@@ -618,23 +750,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildSection(String title, List<Widget> tiles) {
+  // ── Section & tile ─────────────────────────────────────────────────────────
+
+  Widget _buildSection(String title, ThemeProvider theme, List<Widget> tiles) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title.toUpperCase(),
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w600,
-            color: Color(0x4DFFFFFF),
+            color: theme.textPrimary.withValues(alpha: 0.3),
             letterSpacing: 0.8,
           ),
         ),
         const SizedBox(height: 10),
         Container(
           decoration: BoxDecoration(
-            color: _kSurf,
+            color: theme.surface,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Column(children: tiles),
@@ -644,32 +778,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildTile({
+    required ThemeProvider theme,
     required IconData icon,
     required String label,
     String? value,
     Color? valueColor,
     VoidCallback? onTap,
+    Widget? trailingExtra,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           border: Border(
-            bottom: BorderSide(color: Color(0x0DFFFFFF), width: 0.5),
+            bottom: BorderSide(
+              color: theme.textPrimary.withValues(alpha: 0.06),
+              width: 0.5,
+            ),
           ),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 18, color: Colors.white38),
+            Icon(
+              icon,
+              size: 18,
+              color: theme.textPrimary.withValues(alpha: 0.35),
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: Color(0xB3FFFFFF),
+                  color: theme.textPrimary.withValues(alpha: 0.7),
                 ),
               ),
             ),
@@ -678,15 +821,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 value,
                 style: TextStyle(
                   fontSize: 13,
-                  color: valueColor ?? Colors.white24,
+                  color:
+                      valueColor ?? theme.textPrimary.withValues(alpha: 0.25),
                   fontWeight: FontWeight.w500,
                 ),
               ),
+            if (trailingExtra != null) ...[
+              const SizedBox(width: 8),
+              trailingExtra,
+            ],
             if (onTap != null)
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
                 size: 18,
-                color: Color(0x26FFFFFF),
+                color: theme.textPrimary.withValues(alpha: 0.15),
               ),
           ],
         ),
@@ -694,42 +842,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _editName(BuildContext context) {
+  // ── Edit name ──────────────────────────────────────────────────────────────
+
+  void _editName(BuildContext context, ThemeProvider theme) {
     final controller = TextEditingController(text: _user?.displayName ?? '');
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
-        backgroundColor: _kSurf,
+        backgroundColor: theme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
+              Text(
                 'Editar nome',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: _kText,
+                  color: theme.textPrimary,
                 ),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: controller,
                 autofocus: true,
-                style: const TextStyle(color: _kText, fontSize: 15),
-                cursorColor: _kOrange,
+                style: TextStyle(color: theme.textPrimary, fontSize: 15),
+                cursorColor: theme.accent,
                 decoration: InputDecoration(
                   filled: true,
-                  fillColor: const Color(0xFF2C2C2C),
+                  fillColor: theme.isLight
+                      ? const Color(0xFFF0F0F0)
+                      : const Color(0xFF2C2C2C),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: _kOrange, width: 1),
+                    borderSide: BorderSide(color: theme.accent, width: 1),
                   ),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 14,
@@ -745,7 +897,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       onTap: () => Navigator.pop(ctx),
                       child: _dialogBtn(
                         'Cancelar',
-                        const Color(0xFF2C2C2C),
+                        theme.isLight
+                            ? const Color(0xFFE8E8E8)
+                            : const Color(0xFF2C2C2C),
                         const Color(0xFF888888),
                       ),
                     ),
@@ -763,7 +917,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           _showMessage('Nome atualizado com sucesso.');
                         }
                       },
-                      child: _dialogBtn('Guardar', _kOrange, Colors.white),
+                      child: _dialogBtn('Guardar', theme.accent, Colors.white),
                     ),
                   ),
                 ],
@@ -775,30 +929,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _confirmLogout(BuildContext context) {
+  // ── Logout ─────────────────────────────────────────────────────────────────
+
+  void _confirmLogout(BuildContext context, ThemeProvider theme) {
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
-        backgroundColor: _kSurf,
+        backgroundColor: theme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
+              Text(
                 'Terminar sessão?',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: _kText,
+                  color: theme.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Os teus hábitos ficam guardados na cloud.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: Color(0x59FFFFFF)),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: theme.textPrimary.withValues(alpha: 0.4),
+                ),
               ),
               const SizedBox(height: 24),
               Row(
@@ -808,7 +967,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       onTap: () => Navigator.pop(ctx),
                       child: _dialogBtn(
                         'Cancelar',
-                        const Color(0xFF2C2C2C),
+                        theme.isLight
+                            ? const Color(0xFFE8E8E8)
+                            : const Color(0xFF2C2C2C),
                         const Color(0xFF888888),
                       ),
                     ),

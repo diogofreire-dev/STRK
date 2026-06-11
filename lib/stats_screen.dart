@@ -1,12 +1,6 @@
 import 'package:flutter/material.dart';
 import 'habit.dart';
-
-const _kOrange = Color(0xFFFF6B00);
-const _kAmber = Color(0xFFFFB300);
-const _kEmber = Color(0xFFFF3B00);
-const _kBg = Color(0xFF0D0D0D);
-const _kSurf = Color(0xFF1A1A1A);
-const _kText = Color(0xFFE8E8E8);
+import 'theme_provider.dart';
 
 class StatsScreen extends StatelessWidget {
   final List<Habit> habits;
@@ -14,6 +8,7 @@ class StatsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = ThemeProviderScope.of(context);
     final completed = habits.where((h) => h.completedToday).length;
     final total = habits.length;
     final progress = total == 0 ? 0.0 : completed / total;
@@ -25,7 +20,7 @@ class StatsScreen extends StatelessWidget {
         : habits.map((h) => h.streak).reduce((a, b) => a + b) / habits.length;
 
     return Scaffold(
-      backgroundColor: _kBg,
+      backgroundColor: theme.bg,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -33,17 +28,17 @@ class StatsScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 8),
-              _buildTodayCard(completed, total, progress),
+              _buildTodayCard(completed, total, progress, theme),
               const SizedBox(height: 16),
-              _buildStatsGrid(bestStreak, avgStreak),
+              _buildStatsGrid(bestStreak, avgStreak, theme),
               const SizedBox(height: 24),
-              _buildSectionLabel('Hábitos por streak'),
+              _sectionLabel('Hábitos por streak', theme),
               const SizedBox(height: 12),
-              _buildStreakList(),
+              _buildStreakList(theme),
               const SizedBox(height: 24),
-              _buildSectionLabel('Progresso de hoje'),
+              _sectionLabel('Progresso de hoje', theme),
               const SizedBox(height: 12),
-              _buildHabitBars(),
+              _buildHabitBars(theme),
             ],
           ),
         ),
@@ -51,11 +46,27 @@ class StatsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTodayCard(int completed, int total, double progress) {
+  Widget _sectionLabel(String label, ThemeProvider theme) => Text(
+    label.toUpperCase(),
+    style: TextStyle(
+      fontSize: 11,
+      fontWeight: FontWeight.w600,
+      color: theme.textHint,
+      letterSpacing: 0.8,
+    ),
+  );
+
+  Widget _buildTodayCard(
+    int completed,
+    int total,
+    double progress,
+    ThemeProvider theme,
+  ) {
+    final accent = theme.accent;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [_kEmber, _kOrange, _kAmber]),
+        color: accent,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
@@ -135,106 +146,99 @@ class StatsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatsGrid(int bestStreak, double avgStreak) {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildStatCard(
-            'Melhor streak',
-            '$bestStreak',
-            'dias',
-            Icons.local_fire_department_rounded,
-            _kOrange,
-          ),
+  Widget _buildStatsGrid(
+    int bestStreak,
+    double avgStreak,
+    ThemeProvider theme,
+  ) => Row(
+    children: [
+      Expanded(
+        child: _statCard(
+          'Melhor streak',
+          '$bestStreak',
+          'dias',
+          Icons.local_fire_department_rounded,
+          theme.accent,
+          theme,
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildStatCard(
-            'Média de streak',
-            avgStreak.toStringAsFixed(1),
-            'dias',
-            Icons.trending_up_rounded,
-            _kAmber,
-          ),
+      ),
+      const SizedBox(width: 12),
+      Expanded(
+        child: _statCard(
+          'Média de streak',
+          avgStreak.toStringAsFixed(1),
+          'dias',
+          Icons.trending_up_rounded,
+          const Color(0xFFFFB300),
+          theme,
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildStatCard(
-            'Total hábitos',
-            '${habits.length}',
-            'hábitos',
-            Icons.checklist_rounded,
-            const Color(0xFF64D2FF),
-          ),
+      ),
+      const SizedBox(width: 12),
+      Expanded(
+        child: _statCard(
+          'Total hábitos',
+          '${habits.length}',
+          'hábitos',
+          Icons.checklist_rounded,
+          const Color(0xFF64D2FF),
+          theme,
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
 
-  Widget _buildStatCard(
+  Widget _statCard(
     String label,
     String value,
     String unit,
     IconData icon,
     Color iconColor,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: _kSurf,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: iconColor, size: 20),
-          const SizedBox(height: 10),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w800,
-              color: _kText,
-              letterSpacing: -1,
-            ),
+    ThemeProvider theme,
+  ) => Container(
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: theme.surface,
+      borderRadius: BorderRadius.circular(16),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: iconColor, size: 20),
+        const SizedBox(height: 10),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w800,
+            color: theme.textPrimary,
+            letterSpacing: -1,
           ),
-          Text(
-            unit,
-            style: const TextStyle(
-              fontSize: 11,
-              color: Color(0x4DFFFFFF),
-              fontWeight: FontWeight.w500,
-            ),
+        ),
+        Text(
+          unit,
+          style: TextStyle(
+            fontSize: 11,
+            color: theme.textSecondary,
+            fontWeight: FontWeight.w500,
           ),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 10,
-              color: Color(0x40FFFFFF),
-              fontWeight: FontWeight.w500,
-            ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            color: theme.textHint,
+            fontWeight: FontWeight.w500,
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSectionLabel(String label) => Text(
-    label.toUpperCase(),
-    style: const TextStyle(
-      fontSize: 11,
-      fontWeight: FontWeight.w600,
-      color: Color(0x4DFFFFFF),
-      letterSpacing: 0.8,
+        ),
+      ],
     ),
   );
 
-  Widget _buildStreakList() {
-    if (habits.isEmpty) return _buildEmpty('Ainda não tens hábitos.');
+  Widget _buildStreakList(ThemeProvider theme) {
+    if (habits.isEmpty) return _empty('Ainda não tens hábitos.', theme);
     final sorted = [...habits]..sort((a, b) => b.streak.compareTo(a.streak));
     final maxStreak = sorted.first.streak;
-
     return Column(
       children: sorted.map((habit) {
         final pct = maxStreak == 0 ? 0.0 : habit.streak / maxStreak;
@@ -242,7 +246,7 @@ class StatsScreen extends StatelessWidget {
           margin: const EdgeInsets.only(bottom: 10),
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: _kSurf,
+            color: theme.surface,
             borderRadius: BorderRadius.circular(14),
           ),
           child: Row(
@@ -251,10 +255,10 @@ class StatsScreen extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2C2C2C),
+                  color: theme.surfaceAlt,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(habit.icon, size: 16, color: _kOrange),
+                child: Icon(habit.icon, size: 16, color: theme.accent),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -266,18 +270,18 @@ class StatsScreen extends StatelessWidget {
                       children: [
                         Text(
                           habit.name,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: _kText,
+                            color: theme.textPrimary,
                           ),
                         ),
                         Text(
                           '${habit.streak} dias',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
-                            color: _kOrange,
+                            color: theme.accent,
                           ),
                         ),
                       ],
@@ -288,10 +292,8 @@ class StatsScreen extends StatelessWidget {
                       child: LinearProgressIndicator(
                         value: pct,
                         minHeight: 4,
-                        backgroundColor: Colors.white10,
-                        valueColor: const AlwaysStoppedAnimation<Color>(
-                          _kOrange,
-                        ),
+                        backgroundColor: theme.surfaceAlt,
+                        valueColor: AlwaysStoppedAnimation<Color>(theme.accent),
                       ),
                     ),
                   ],
@@ -304,8 +306,8 @@ class StatsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHabitBars() {
-    if (habits.isEmpty) return _buildEmpty('Ainda não tens hábitos.');
+  Widget _buildHabitBars(ThemeProvider theme) {
+    if (habits.isEmpty) return _empty('Ainda não tens hábitos.', theme);
     return Column(
       children: habits
           .map(
@@ -313,11 +315,11 @@ class StatsScreen extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 10),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                color: _kSurf,
+                color: theme.surface,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
                   color: habit.completedToday
-                      ? _kOrange.withValues(alpha: 0.25)
+                      ? theme.accent.withValues(alpha: 0.25)
                       : Colors.transparent,
                 ),
               ),
@@ -327,7 +329,7 @@ class StatsScreen extends StatelessWidget {
                     habit.completedToday
                         ? Icons.check_circle_rounded
                         : Icons.radio_button_unchecked_rounded,
-                    color: habit.completedToday ? _kOrange : Colors.white24,
+                    color: habit.completedToday ? theme.accent : theme.textHint,
                     size: 20,
                   ),
                   const SizedBox(width: 12),
@@ -337,7 +339,9 @@ class StatsScreen extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: habit.completedToday ? _kText : Colors.white70,
+                        color: habit.completedToday
+                            ? theme.textPrimary
+                            : theme.textSecondary,
                       ),
                     ),
                   ),
@@ -346,7 +350,9 @@ class StatsScreen extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: habit.completedToday ? _kOrange : Colors.white24,
+                      color: habit.completedToday
+                          ? theme.accent
+                          : theme.textHint,
                     ),
                   ),
                 ],
@@ -357,10 +363,7 @@ class StatsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildEmpty(String msg) => Center(
-    child: Text(
-      msg,
-      style: const TextStyle(color: Color(0x33FFFFFF), fontSize: 14),
-    ),
+  Widget _empty(String msg, ThemeProvider theme) => Center(
+    child: Text(msg, style: TextStyle(color: theme.textHint, fontSize: 14)),
   );
 }

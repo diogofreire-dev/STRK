@@ -1,17 +1,11 @@
 import 'package:flutter/material.dart';
 import 'habit.dart';
 import 'habit_service.dart';
-
-const _kOrange = Color(0xFFFF6B00);
-const _kAmber = Color(0xFFFFB300);
-const _kBg = Color(0xFF0D0D0D);
-const _kSurf = Color(0xFF1A1A1A);
-const _kText = Color(0xFFE8E8E8);
+import 'theme_provider.dart';
 
 class CalendarScreen extends StatefulWidget {
   final List<Habit> habits;
   const CalendarScreen({super.key, required this.habits});
-
   @override
   State<CalendarScreen> createState() => _CalendarScreenState();
 }
@@ -57,8 +51,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = ThemeProviderScope.of(context);
     return Scaffold(
-      backgroundColor: _kBg,
+      backgroundColor: theme.bg,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -66,35 +61,35 @@ class _CalendarScreenState extends State<CalendarScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (widget.habits.isEmpty)
-                const Center(
+                Center(
                   child: Text(
                     'Ainda não tens hábitos.',
-                    style: TextStyle(color: Color(0x33FFFFFF), fontSize: 14),
+                    style: TextStyle(color: theme.textHint, fontSize: 14),
                   ),
                 )
               else ...[
-                _buildHabitSelector(),
+                _buildHabitSelector(theme),
                 const SizedBox(height: 24),
-                _buildLegend(),
+                _buildLegend(theme),
                 const SizedBox(height: 16),
                 _loading
-                    ? const Center(
+                    ? Center(
                         child: CircularProgressIndicator(
-                          color: _kOrange,
+                          color: theme.accent,
                           strokeWidth: 2,
                         ),
                       )
-                    : _buildHeatmap(),
+                    : _buildHeatmap(theme),
                 const SizedBox(height: 24),
-                _buildStats(),
+                _buildStats(theme),
                 const SizedBox(height: 24),
-                _buildSectionLabel('ESTA SEMANA'),
+                _sectionLabel('ESTA SEMANA', theme),
                 const SizedBox(height: 12),
-                _buildWeeklyBars(),
+                _buildWeeklyBars(theme),
                 const SizedBox(height: 24),
-                _buildSectionLabel('ESTE MÊS'),
+                _sectionLabel('ESTE MÊS', theme),
                 const SizedBox(height: 12),
-                _buildMonthlySummary(),
+                _buildMonthlySummary(theme),
                 const SizedBox(height: 24),
               ],
             ],
@@ -104,269 +99,27 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
-  Widget _buildSectionLabel(String label) {
-    return Text(
-      label,
-      style: const TextStyle(
-        fontSize: 11,
-        fontWeight: FontWeight.w600,
-        color: Color(0x4DFFFFFF),
-        letterSpacing: 0.8,
-      ),
-    );
-  }
+  Widget _sectionLabel(String label, ThemeProvider theme) => Text(
+    label,
+    style: TextStyle(
+      fontSize: 11,
+      fontWeight: FontWeight.w600,
+      color: theme.textHint,
+      letterSpacing: 0.8,
+    ),
+  );
 
-  // ── Weekly bars ───────────────────────────────────────────────────────────
+  Widget _buildHabitSelector(ThemeProvider theme) => SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    child: Row(
+      children: [
+        _chip(null, Icons.grid_view_rounded, 'Todos', theme),
+        ...widget.habits.map((h) => _chip(h, h.icon, h.name, theme)),
+      ],
+    ),
+  );
 
-  Widget _buildWeeklyBars() {
-    final now = DateTime.now();
-    final weekDayLabels = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
-    final days = List.generate(7, (i) => now.subtract(Duration(days: 6 - i)));
-    final maxCount = widget.habits.isEmpty
-        ? 1
-        : widget.habits.length.toDouble();
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: _kSurf,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: days.map((date) {
-              final key = _dateKey(date);
-              final isToday = key == HabitService.todayString();
-              double ratio;
-              if (_isAll) {
-                ratio = ((_allLogs[key] ?? 0).toDouble() / maxCount).clamp(
-                  0.0,
-                  1.0,
-                );
-              } else {
-                ratio = (_logs[key] == true) ? 1.0 : 0.0;
-              }
-              final barH = 60.0 * ratio + 4.0;
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  if (ratio > 0)
-                    Text(
-                      '${(ratio * 100).round()}%',
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w700,
-                        color: isToday ? _kOrange : Colors.white24,
-                      ),
-                    )
-                  else
-                    const SizedBox(height: 13),
-                  const SizedBox(height: 4),
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 400),
-                    curve: Curves.easeOut,
-                    width: 28,
-                    height: barH,
-                    decoration: BoxDecoration(
-                      color: ratio == 0
-                          ? Colors.white10
-                          : isToday
-                          ? _kOrange
-                          : Color.lerp(
-                              const Color(0x66FF6B00),
-                              _kAmber,
-                              ratio,
-                            )!,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ),
-                ],
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: days.map((date) {
-              final key = _dateKey(date);
-              final isToday = key == HabitService.todayString();
-              return SizedBox(
-                width: 28,
-                child: Text(
-                  weekDayLabels[date.weekday - 1],
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
-                    color: isToday ? _kOrange : Colors.white24,
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Monthly summary ───────────────────────────────────────────────────────
-
-  Widget _buildMonthlySummary() {
-    final now = DateTime.now();
-    final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
-    final pastDays = now.day;
-
-    int activeDays = 0, perfectDays = 0, bestDayCount = 0;
-    for (int d = 1; d <= pastDays; d++) {
-      final key = _dateKey(DateTime(now.year, now.month, d));
-      final count = _isAll
-          ? (_allLogs[key] ?? 0)
-          : ((_logs[key] == true) ? 1 : 0);
-      if (count > 0) activeDays++;
-      final total = _isAll ? widget.habits.length : 1;
-      if (total > 0 && count == total) perfectDays++;
-      if (count > bestDayCount) bestDayCount = count;
-    }
-    final monthRate = pastDays == 0
-        ? 0
-        : ((activeDays / pastDays) * 100).round();
-
-    String bestHabit = '—';
-    if (_isAll && widget.habits.isNotEmpty) {
-      int bestCount = -1;
-      for (final habit in widget.habits) {
-        int hc = 0;
-        for (int d = 1; d <= pastDays; d++) {
-          if ((_allLogs[_dateKey(DateTime(now.year, now.month, d))] ?? 0) > 0)
-            hc++;
-        }
-        if (hc > bestCount) {
-          bestCount = hc;
-          bestHabit = habit.name;
-        }
-      }
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: _kSurf,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                _monthName(now.month),
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: _kText,
-                ),
-              ),
-              Text(
-                '${now.day}/$daysInMonth dias',
-                style: const TextStyle(fontSize: 11, color: Color(0x4DFFFFFF)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(99),
-            child: LinearProgressIndicator(
-              value: daysInMonth == 0 ? 0 : now.day / daysInMonth,
-              minHeight: 4,
-              backgroundColor: Colors.white12,
-              valueColor: const AlwaysStoppedAnimation<Color>(_kOrange),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildStatItem('Dias ativos', '$activeDays'),
-              _buildDividerV(),
-              _buildStatItem('Dias perfeitos', '$perfectDays'),
-              _buildDividerV(),
-              _buildStatItem('Taxa mensal', '$monthRate%'),
-            ],
-          ),
-          if (_isAll && bestHabit != '—') ...[
-            const SizedBox(height: 16),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: _kOrange.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _kOrange.withValues(alpha: 0.2)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.local_fire_department_rounded,
-                    size: 16,
-                    color: _kOrange,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Hábito destaque: $bestHabit',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: _kOrange,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  String _monthName(int m) {
-    const n = [
-      '',
-      'Janeiro',
-      'Fevereiro',
-      'Março',
-      'Abril',
-      'Maio',
-      'Junho',
-      'Julho',
-      'Agosto',
-      'Setembro',
-      'Outubro',
-      'Novembro',
-      'Dezembro',
-    ];
-    return n[m];
-  }
-
-  // ── Habit selector ────────────────────────────────────────────────────────
-
-  Widget _buildHabitSelector() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          _chip(null, Icons.grid_view_rounded, 'Todos'),
-          ...widget.habits.map((h) => _chip(h, h.icon, h.name)),
-        ],
-      ),
-    );
-  }
-
-  Widget _chip(Habit? habit, IconData icon, String label) {
+  Widget _chip(Habit? habit, IconData icon, String label, ThemeProvider theme) {
     final selected = habit == null ? _isAll : _selectedHabit?.id == habit.id;
     return GestureDetector(
       onTap: () {
@@ -378,7 +131,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         margin: const EdgeInsets.only(right: 8),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? _kOrange : _kSurf,
+          color: selected ? theme.accent : theme.surface,
           borderRadius: BorderRadius.circular(99),
         ),
         child: Row(
@@ -387,7 +140,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             Icon(
               icon,
               size: 14,
-              color: selected ? Colors.white : Colors.white38,
+              color: selected ? Colors.white : theme.textHint,
             ),
             const SizedBox(width: 6),
             Text(
@@ -395,7 +148,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: selected ? Colors.white : Colors.white38,
+                color: selected ? Colors.white : theme.textHint,
               ),
             ),
           ],
@@ -404,39 +157,31 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
-  // ── Legend ────────────────────────────────────────────────────────────────
-
-  Widget _buildLegend() {
-    return Row(
-      children: [
-        const Text(
-          'Menos',
-          style: TextStyle(fontSize: 11, color: Color(0x40FFFFFF)),
-        ),
-        const SizedBox(width: 6),
-        ...[0.08, 0.25, 0.5, 0.75, 1.0].map(
-          (o) => Container(
-            width: 14,
-            height: 14,
-            margin: const EdgeInsets.symmetric(horizontal: 2),
-            decoration: BoxDecoration(
-              color: Color.lerp(const Color(0x14FF6B00), _kAmber, o),
-              borderRadius: BorderRadius.circular(3),
+  Widget _buildLegend(ThemeProvider theme) => Row(
+    children: [
+      Text('Menos', style: TextStyle(fontSize: 11, color: theme.textHint)),
+      const SizedBox(width: 6),
+      ...[0.08, 0.25, 0.5, 0.75, 1.0].map(
+        (o) => Container(
+          width: 14,
+          height: 14,
+          margin: const EdgeInsets.symmetric(horizontal: 2),
+          decoration: BoxDecoration(
+            color: Color.lerp(
+              theme.accent.withValues(alpha: 0.15),
+              theme.accent,
+              o,
             ),
+            borderRadius: BorderRadius.circular(3),
           ),
         ),
-        const SizedBox(width: 6),
-        const Text(
-          'Mais',
-          style: TextStyle(fontSize: 11, color: Color(0x40FFFFFF)),
-        ),
-      ],
-    );
-  }
+      ),
+      const SizedBox(width: 6),
+      Text('Mais', style: TextStyle(fontSize: 11, color: theme.textHint)),
+    ],
+  );
 
-  // ── Heatmap ───────────────────────────────────────────────────────────────
-
-  Widget _buildHeatmap() {
+  Widget _buildHeatmap(ThemeProvider theme) {
     final now = DateTime.now();
     const weeks = 18;
     const totalDays = weeks * 7;
@@ -462,9 +207,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       width: 16,
                       child: Text(
                         l,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 9,
-                          color: Color(0x33FFFFFF),
+                          color: theme.textHint,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -490,31 +235,26 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         final key = _dateKey(date);
                         final isToday = key == HabitService.todayString();
                         final isFuture = date.isAfter(now);
-
                         Color cellColor;
                         if (_isAll) {
                           final count = _allLogs[key] ?? 0;
-                          if (isFuture || count == 0) {
-                            cellColor = isFuture
-                                ? Colors.transparent
-                                : Colors.white10;
-                          } else {
-                            final t = (count / maxCount).clamp(0.15, 1.0);
-                            cellColor = Color.lerp(
-                              const Color(0x40FF6B00),
-                              _kAmber,
-                              t,
-                            )!;
-                          }
+                          cellColor = isFuture
+                              ? Colors.transparent
+                              : count == 0
+                              ? theme.surfaceAlt
+                              : Color.lerp(
+                                  theme.accent.withValues(alpha: 0.3),
+                                  theme.accent,
+                                  (count / maxCount).clamp(0.15, 1.0),
+                                )!;
                         } else {
                           final done = _logs[key] ?? false;
                           cellColor = isFuture
                               ? Colors.transparent
                               : done
-                              ? _kOrange
-                              : Colors.white10;
+                              ? theme.accent
+                              : theme.surfaceAlt;
                         }
-
                         return Tooltip(
                           message: key,
                           child: Container(
@@ -525,7 +265,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               color: cellColor,
                               borderRadius: BorderRadius.circular(3),
                               border: isToday
-                                  ? Border.all(color: _kOrange, width: 1.5)
+                                  ? Border.all(color: theme.accent, width: 1.5)
                                   : null,
                             ),
                           ),
@@ -542,9 +282,182 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
-  // ── Stats ─────────────────────────────────────────────────────────────────
+  Widget _buildWeeklyBars(ThemeProvider theme) {
+    final now = DateTime.now();
+    final weekDayLabels = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+    final days = List.generate(7, (i) => now.subtract(Duration(days: 6 - i)));
+    final maxCount = widget.habits.isEmpty
+        ? 1
+        : widget.habits.length.toDouble();
 
-  Widget _buildStats() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: days.map((date) {
+              final key = _dateKey(date);
+              final isToday = key == HabitService.todayString();
+              final ratio = _isAll
+                  ? ((_allLogs[key] ?? 0).toDouble() / maxCount).clamp(0.0, 1.0)
+                  : (_logs[key] == true)
+                  ? 1.0
+                  : 0.0;
+              final barH = 60.0 * ratio + 4.0;
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (ratio > 0)
+                    Text(
+                      '${(ratio * 100).round()}%',
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        color: isToday ? theme.accent : theme.textHint,
+                      ),
+                    )
+                  else
+                    const SizedBox(height: 13),
+                  const SizedBox(height: 4),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 400),
+                    curve: Curves.easeOut,
+                    width: 28,
+                    height: barH,
+                    decoration: BoxDecoration(
+                      color: ratio == 0
+                          ? theme.surfaceAlt
+                          : isToday
+                          ? theme.accent
+                          : Color.lerp(
+                              theme.accent.withValues(alpha: 0.4),
+                              theme.accent,
+                              ratio,
+                            )!,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                ],
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: days.map((date) {
+              final key = _dateKey(date);
+              final isToday = key == HabitService.todayString();
+              return SizedBox(
+                width: 28,
+                child: Text(
+                  weekDayLabels[date.weekday - 1],
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
+                    color: isToday ? theme.accent : theme.textHint,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMonthlySummary(ThemeProvider theme) {
+    final now = DateTime.now();
+    final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+    final pastDays = now.day;
+    int activeDays = 0, perfectDays = 0;
+    for (int d = 1; d <= pastDays; d++) {
+      final key = _dateKey(DateTime(now.year, now.month, d));
+      final count = _isAll
+          ? (_allLogs[key] ?? 0)
+          : ((_logs[key] == true) ? 1 : 0);
+      if (count > 0) activeDays++;
+      final total = _isAll ? widget.habits.length : 1;
+      if (total > 0 && count == total) perfectDays++;
+    }
+    final monthRate = pastDays == 0
+        ? 0
+        : ((activeDays / pastDays) * 100).round();
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                _monthName(now.month),
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: theme.textPrimary,
+                ),
+              ),
+              Text(
+                '${now.day}/$daysInMonth dias',
+                style: TextStyle(fontSize: 11, color: theme.textHint),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(99),
+            child: LinearProgressIndicator(
+              value: daysInMonth == 0 ? 0 : now.day / daysInMonth,
+              minHeight: 4,
+              backgroundColor: theme.surfaceAlt,
+              valueColor: AlwaysStoppedAnimation<Color>(theme.accent),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _statItem('Dias ativos', '$activeDays', theme),
+              _dividerV(theme),
+              _statItem('Dias perfeitos', '$perfectDays', theme),
+              _dividerV(theme),
+              _statItem('Taxa mensal', '$monthRate%', theme),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _monthName(int m) => const [
+    '',
+    'Janeiro',
+    'Fevereiro',
+    'Março',
+    'Abril',
+    'Maio',
+    'Junho',
+    'Julho',
+    'Agosto',
+    'Setembro',
+    'Outubro',
+    'Novembro',
+    'Dezembro',
+  ][m];
+
+  Widget _buildStats(ThemeProvider theme) {
     if (_isAll) {
       final activeDays = _allLogs.values.where((c) => c > 0).length;
       final perfectDays = _allLogs.values
@@ -553,29 +466,29 @@ class _CalendarScreenState extends State<CalendarScreen> {
       final total = _allLogs.length;
       final rate = total == 0 ? 0 : ((activeDays / total) * 100).round();
       return _statsCard([
-        _buildStatItem('Dias ativos', '$activeDays'),
-        _buildDividerV(),
-        _buildStatItem('Dias perfeitos', '$perfectDays'),
-        _buildDividerV(),
-        _buildStatItem('Taxa', '$rate%'),
-      ]);
+        _statItem('Dias ativos', '$activeDays', theme),
+        _dividerV(theme),
+        _statItem('Dias perfeitos', '$perfectDays', theme),
+        _dividerV(theme),
+        _statItem('Taxa', '$rate%', theme),
+      ], theme);
     }
     final done = _logs.values.where((v) => v).length;
     final total = _logs.length;
     final rate = total == 0 ? 0 : ((done / total) * 100).round();
     return _statsCard([
-      _buildStatItem('Dias feitos', '$done'),
-      _buildDividerV(),
-      _buildStatItem('Taxa', '$rate%'),
-      _buildDividerV(),
-      _buildStatItem('Streak atual', '${_selectedHabit?.streak ?? 0} dias'),
-    ]);
+      _statItem('Dias feitos', '$done', theme),
+      _dividerV(theme),
+      _statItem('Taxa', '$rate%', theme),
+      _dividerV(theme),
+      _statItem('Streak atual', '${_selectedHabit?.streak ?? 0} dias', theme),
+    ], theme);
   }
 
-  Widget _statsCard(List<Widget> children) => Container(
+  Widget _statsCard(List<Widget> children, ThemeProvider theme) => Container(
     padding: const EdgeInsets.all(20),
     decoration: BoxDecoration(
-      color: _kSurf,
+      color: theme.surface,
       borderRadius: BorderRadius.circular(20),
     ),
     child: Row(
@@ -584,31 +497,31 @@ class _CalendarScreenState extends State<CalendarScreen> {
     ),
   );
 
-  Widget _buildStatItem(String label, String value) => Column(
+  Widget _statItem(String label, String value, ThemeProvider theme) => Column(
     children: [
       Text(
         value,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 22,
           fontWeight: FontWeight.w800,
-          color: _kText,
+          color: theme.textPrimary,
           letterSpacing: -1,
         ),
       ),
       const SizedBox(height: 4),
       Text(
         label,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 11,
-          color: Color(0x4DFFFFFF),
+          color: theme.textHint,
           fontWeight: FontWeight.w500,
         ),
       ),
     ],
   );
 
-  Widget _buildDividerV() =>
-      Container(width: 0.5, height: 40, color: Colors.white12);
+  Widget _dividerV(ThemeProvider theme) =>
+      Container(width: 0.5, height: 40, color: theme.divider);
 
   String _dateKey(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';

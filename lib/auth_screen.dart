@@ -2,18 +2,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-
-const _kOrange = Color(0xFFFF6B00);
-const _kAmber = Color(0xFFFFB300);
-const _kEmber = Color(0xFFFF3B00);
-const _kBg = Color(0xFF0D0D0D);
-const _kSurf = Color(0xFF1A1A1A);
-const _kText = Color(0xFFE8E8E8);
+import 'theme_provider.dart';
+import 'strk_logo.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
-
   @override
   State<AuthScreen> createState() => _AuthScreenState();
 }
@@ -35,7 +28,6 @@ class _AuthScreenState extends State<AuthScreen> {
       _error = null;
       _success = null;
     });
-
     if (!_isLogin && _passwordController.text != _confirmController.text) {
       setState(() {
         _error = 'As passwords não coincidem.';
@@ -43,7 +35,6 @@ class _AuthScreenState extends State<AuthScreen> {
       });
       return;
     }
-
     try {
       if (_isLogin) {
         await FirebaseAuth.instance.signInWithEmailAndPassword(
@@ -117,8 +108,9 @@ class _AuthScreenState extends State<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = ThemeProviderScope.of(context);
     return Scaffold(
-      backgroundColor: _kBg,
+      backgroundColor: theme.bg,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -126,11 +118,12 @@ class _AuthScreenState extends State<AuthScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 40),
-              _buildLogo(),
+              const StrkLogo(height: 28),
               const SizedBox(height: 48),
-              _buildTitle(),
+              _buildTitle(theme),
               const SizedBox(height: 32),
               _buildField(
+                theme,
                 controller: _emailController,
                 hint: 'Email',
                 icon: Icons.mail_outline_rounded,
@@ -138,6 +131,7 @@ class _AuthScreenState extends State<AuthScreen> {
               ),
               const SizedBox(height: 12),
               _buildField(
+                theme,
                 controller: _passwordController,
                 hint: 'Password',
                 icon: Icons.lock_outline_rounded,
@@ -148,6 +142,7 @@ class _AuthScreenState extends State<AuthScreen> {
               if (!_isLogin) ...[
                 const SizedBox(height: 12),
                 _buildField(
+                  theme,
                   controller: _confirmController,
                   hint: 'Confirmar password',
                   icon: Icons.lock_outline_rounded,
@@ -158,20 +153,20 @@ class _AuthScreenState extends State<AuthScreen> {
               ],
               if (_error != null) ...[
                 const SizedBox(height: 12),
-                _buildMessage(_error!, isError: true),
+                _buildMessage(_error!, isError: true, theme: theme),
               ],
               if (_success != null) ...[
                 const SizedBox(height: 12),
-                _buildMessage(_success!, isError: false),
+                _buildMessage(_success!, isError: false, theme: theme),
               ],
               const SizedBox(height: 24),
-              _buildSubmitButton(),
+              _buildSubmitButton(theme),
               const SizedBox(height: 16),
-              _buildDivider(),
+              _buildDivider(theme),
               const SizedBox(height: 16),
-              _buildGoogleButton(),
+              _buildGoogleButton(theme),
               const SizedBox(height: 24),
-              _buildToggle(),
+              _buildToggle(theme),
               const SizedBox(height: 40),
             ],
           ),
@@ -180,89 +175,79 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
-  Widget _buildLogo() {
-    return SvgPicture.asset('assets/images/strk_logo.svg', height: 28);
-  }
-
-  Widget _buildTitle() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          _isLogin ? 'Bem-vindo\nde volta.' : 'Cria a tua\nconta.',
-          style: const TextStyle(
-            fontSize: 36,
-            fontWeight: FontWeight.w800,
-            color: _kText,
-            letterSpacing: -1.5,
-            height: 1.1,
-          ),
+  Widget _buildTitle(ThemeProvider theme) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        _isLogin ? 'Bem-vindo\nde volta.' : 'Cria a tua\nconta.',
+        style: TextStyle(
+          fontSize: 36,
+          fontWeight: FontWeight.w800,
+          color: theme.textPrimary,
+          letterSpacing: -1.5,
+          height: 1.1,
         ),
-        const SizedBox(height: 8),
-        Text(
-          _isLogin
-              ? 'Inicia sessão para continuares os teus hábitos.'
-              : 'Regista-te para começares a construir os teus hábitos.',
-          style: const TextStyle(
-            fontSize: 13,
-            color: Color(0x59FFFFFF),
-            height: 1.4,
-          ),
-        ),
-      ],
-    );
-  }
+      ),
+      const SizedBox(height: 8),
+      Text(
+        _isLogin
+            ? 'Inicia sessão para continuares os teus hábitos.'
+            : 'Regista-te para começares a construir os teus hábitos.',
+        style: TextStyle(fontSize: 13, color: theme.textSecondary, height: 1.4),
+      ),
+    ],
+  );
 
-  Widget _buildField({
+  Widget _buildField(
+    ThemeProvider theme, {
     required TextEditingController controller,
     required String hint,
     required IconData icon,
     TextInputType? keyboardType,
     bool obscure = false,
     VoidCallback? toggleObscure,
-  }) {
-    return TextField(
-      controller: controller,
-      keyboardType: keyboardType,
-      obscureText: obscure,
-      style: const TextStyle(color: _kText, fontSize: 15),
-      cursorColor: _kOrange,
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: const TextStyle(color: Color(0x33FFFFFF)),
-        prefixIcon: Icon(icon, color: const Color(0x33FFFFFF), size: 18),
-        suffixIcon: toggleObscure != null
-            ? GestureDetector(
-                onTap: toggleObscure,
-                child: Icon(
-                  obscure
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined,
-                  color: const Color(0x33FFFFFF),
-                  size: 18,
-                ),
-              )
-            : null,
-        filled: true,
-        fillColor: _kSurf,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: _kOrange, width: 1),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
-        ),
+  }) => TextField(
+    controller: controller,
+    keyboardType: keyboardType,
+    obscureText: obscure,
+    style: TextStyle(color: theme.textPrimary, fontSize: 15),
+    cursorColor: theme.accent,
+    decoration: InputDecoration(
+      hintText: hint,
+      hintStyle: TextStyle(color: theme.textHint),
+      prefixIcon: Icon(icon, color: theme.textHint, size: 18),
+      suffixIcon: toggleObscure != null
+          ? GestureDetector(
+              onTap: toggleObscure,
+              child: Icon(
+                obscure
+                    ? Icons.visibility_outlined
+                    : Icons.visibility_off_outlined,
+                color: theme.textHint,
+                size: 18,
+              ),
+            )
+          : null,
+      filled: true,
+      fillColor: theme.surface,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide.none,
       ),
-    );
-  }
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: theme.accent, width: 1),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    ),
+  );
 
-  Widget _buildMessage(String message, {required bool isError}) {
-    final color = isError ? const Color(0xFFFF3B30) : _kOrange;
+  Widget _buildMessage(
+    String message, {
+    required bool isError,
+    required ThemeProvider theme,
+  }) {
+    final color = isError ? const Color(0xFFFF3B30) : theme.accent;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
@@ -295,119 +280,110 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
-  Widget _buildSubmitButton() {
-    return GestureDetector(
-      onTap: _isLoading ? null : _submit,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(colors: [_kEmber, _kOrange, _kAmber]),
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: _isLoading
-            ? const Center(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                ),
-              )
-            : Text(
-                _isLogin ? 'Entrar' : 'Criar conta',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
+  Widget _buildSubmitButton(ThemeProvider theme) => GestureDetector(
+    onTap: _isLoading ? null : _submit,
+    child: Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        color: theme.accent,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: _isLoading
+          ? const Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
                   color: Colors.white,
-                  letterSpacing: -0.3,
                 ),
               ),
-      ),
-    );
-  }
-
-  Widget _buildDivider() {
-    return Row(
-      children: [
-        const Expanded(child: Divider(color: Color(0x1AFFFFFF))),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Text(
-            'ou',
-            style: const TextStyle(color: Color(0x40FFFFFF), fontSize: 12),
-          ),
-        ),
-        const Expanded(child: Divider(color: Color(0x1AFFFFFF))),
-      ],
-    );
-  }
-
-  Widget _buildGoogleButton() {
-    return GestureDetector(
-      onTap: _isLoading ? null : _signInWithGoogle,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          color: _kSurf,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0x14FFFFFF)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'G',
+            )
+          : Text(
+              _isLogin ? 'Entrar' : 'Criar conta',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: _kText,
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Text(
-              _isLogin ? 'Entrar com Google' : 'Registar com Google',
               style: const TextStyle(
-                color: _kText,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+                letterSpacing: -0.3,
               ),
             ),
-          ],
+    ),
+  );
+
+  Widget _buildDivider(ThemeProvider theme) => Row(
+    children: [
+      Expanded(child: Divider(color: theme.divider)),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: Text(
+          'ou',
+          style: TextStyle(color: theme.textHint, fontSize: 12),
         ),
       ),
-    );
-  }
+      Expanded(child: Divider(color: theme.divider)),
+    ],
+  );
 
-  Widget _buildToggle() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          _isLogin ? 'Não tens conta? ' : 'Já tens conta? ',
-          style: const TextStyle(color: Color(0x4DFFFFFF), fontSize: 13),
-        ),
-        GestureDetector(
-          onTap: () => setState(() {
-            _isLogin = !_isLogin;
-            _error = null;
-            _success = null;
-          }),
-          child: Text(
-            _isLogin ? 'Regista-te' : 'Inicia sessão',
-            style: const TextStyle(
-              color: _kOrange,
-              fontSize: 13,
+  Widget _buildGoogleButton(ThemeProvider theme) => GestureDetector(
+    onTap: _isLoading ? null : _signInWithGoogle,
+    child: Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: theme.cardBorder),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'G',
+            style: TextStyle(
+              color: theme.textPrimary,
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            _isLogin ? 'Entrar com Google' : 'Registar com Google',
+            style: TextStyle(
+              color: theme.textPrimary,
+              fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
           ),
+        ],
+      ),
+    ),
+  );
+
+  Widget _buildToggle(ThemeProvider theme) => Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Text(
+        _isLogin ? 'Não tens conta? ' : 'Já tens conta? ',
+        style: TextStyle(color: theme.textSecondary, fontSize: 13),
+      ),
+      GestureDetector(
+        onTap: () => setState(() {
+          _isLogin = !_isLogin;
+          _error = null;
+          _success = null;
+        }),
+        child: Text(
+          _isLogin ? 'Regista-te' : 'Inicia sessão',
+          style: TextStyle(
+            color: theme.accent,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
 }

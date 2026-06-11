@@ -15,13 +15,7 @@ import 'calendar_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'badges_screen.dart';
 import 'strk_header.dart';
-
-const kFlameOrange = Color(0xFFFF6B00);
-const kFlameAmber = Color(0xFFFFB300);
-const kFlameEmber = Color(0xFFFF3B00);
-const kBg = Color(0xFF0D0D0D);
-const kSurface = Color(0xFF1A1A1A);
-const kTextPrimary = Color(0xFFE8E8E8);
+import 'theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,53 +26,46 @@ void main() async {
   }
 
   await NotificationsService.init();
-  runApp(const StrkApp());
+
+  final themeProvider = ThemeProvider();
+  await themeProvider.load();
+
+  runApp(StrkApp(themeProvider: themeProvider));
 }
 
 class StrkApp extends StatelessWidget {
-  const StrkApp({super.key});
+  final ThemeProvider themeProvider;
+  const StrkApp({super.key, required this.themeProvider});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Strk',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: kBg,
-        colorScheme: const ColorScheme.dark(
-          primary: kFlameOrange,
-          secondary: kFlameAmber,
-          surface: kSurface,
-        ),
-        fontFamily: 'SF Pro Display',
-        switchTheme: SwitchThemeData(
-          thumbColor: WidgetStateProperty.resolveWith(
-            (s) => s.contains(WidgetState.selected) ? kFlameOrange : null,
-          ),
-          trackColor: WidgetStateProperty.resolveWith(
-            (s) => s.contains(WidgetState.selected)
-                ? kFlameOrange.withValues(alpha: 0.3)
-                : null,
-          ),
-        ),
-        progressIndicatorTheme: const ProgressIndicatorThemeData(
-          color: kFlameOrange,
-        ),
-      ),
-      home: StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Scaffold(
-              backgroundColor: kBg,
-              body: Center(
-                child: CircularProgressIndicator(color: kFlameOrange),
-              ),
-            );
-          }
-          if (snapshot.hasData) return const HomeScreen();
-          return const AuthScreen();
+    return ThemeProviderScope(
+      provider: themeProvider,
+      child: AnimatedBuilder(
+        animation: themeProvider,
+        builder: (context, _) {
+          return MaterialApp(
+            title: 'Strk',
+            debugShowCheckedModeBanner: false,
+            theme: themeProvider.themeData,
+            home: StreamBuilder<User?>(
+              stream: FirebaseAuth.instance.authStateChanges(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Scaffold(
+                    backgroundColor: themeProvider.bg,
+                    body: Center(
+                      child: CircularProgressIndicator(
+                        color: themeProvider.accent,
+                      ),
+                    ),
+                  );
+                }
+                if (snapshot.hasData) return const HomeScreen();
+                return const AuthScreen();
+              },
+            ),
+          );
         },
       ),
     );
@@ -193,34 +180,44 @@ class _HomeScreenState extends State<HomeScreen> {
 
   int get completedCount => habits.where((h) => h.completedToday).length;
 
+  bool get _isBirthday {
+    final bd = HabitService.cachedBirthday;
+    if (bd == null) return false;
+    final now = DateTime.now();
+    return bd.month == now.month && bd.day == now.day;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = ThemeProviderScope.of(context);
+
     return Scaffold(
-      backgroundColor: kBg,
-      body: _buildTabContent(),
+      backgroundColor: theme.bg,
+      body: _buildTabContent(theme),
       floatingActionButton: _currentTab == 0
           ? FloatingActionButton(
-              backgroundColor: kFlameOrange,
+              backgroundColor: theme.accent,
               foregroundColor: Colors.white,
               elevation: 0,
               onPressed: _addHabit,
               child: const Icon(Icons.add, size: 28),
             )
           : null,
-      bottomNavigationBar: _buildTabBar(),
+      bottomNavigationBar: _buildTabBar(theme),
     );
   }
 
-  Widget _buildTabContent() {
+  Widget _buildTabContent(ThemeProvider theme) {
     switch (_currentTab) {
       case 0:
         return SafeArea(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHomeHeader(),
-              _buildProgressCard(),
-              _buildHabitsList(),
+              _buildHomeHeader(theme),
+              if (_isBirthday) _buildBirthdayBanner(theme),
+              _buildProgressCard(theme),
+              _buildHabitsList(theme),
             ],
           ),
         );
@@ -228,7 +225,7 @@ class _HomeScreenState extends State<HomeScreen> {
         return SafeArea(
           child: Column(
             children: [
-              _buildPageHeader('Calendário'),
+              _buildPageHeader('Calendário', theme),
               Expanded(child: CalendarScreen(habits: habits)),
             ],
           ),
@@ -239,18 +236,20 @@ class _HomeScreenState extends State<HomeScreen> {
           child: SafeArea(
             child: Column(
               children: [
-                _buildPageHeader('Stats'),
+                _buildPageHeader('Stats', theme),
                 Container(
                   margin: const EdgeInsets.fromLTRB(24, 8, 24, 0),
                   decoration: BoxDecoration(
-                    color: kSurface,
+                    color: theme.surface,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: TabBar(
-                    labelColor: kBg,
-                    unselectedLabelColor: Colors.white38,
+                    labelColor: theme.bg,
+                    unselectedLabelColor: theme.textPrimary.withValues(
+                      alpha: 0.3,
+                    ),
                     indicator: BoxDecoration(
-                      color: kFlameOrange,
+                      color: theme.accent,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     indicatorSize: TabBarIndicatorSize.tab,
@@ -283,9 +282,59 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // ── Birthday banner ───────────────────────────────────────────────────────
+
+  Widget _buildBirthdayBanner(ThemeProvider theme) {
+    final name = _user?.displayName?.split(' ').first ?? '';
+    return Container(
+      margin: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFFBF5AF2).withValues(alpha: 0.2),
+            const Color(0xFFFF6B00).withValues(alpha: 0.2),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: const Color(0xFFBF5AF2).withValues(alpha: 0.4),
+        ),
+      ),
+      child: Row(
+        children: [
+          const Text('🥳', style: TextStyle(fontSize: 24)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Feliz aniversário${name.isNotEmpty ? ', $name' : ''}!',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: theme.textPrimary,
+                  ),
+                ),
+                Text(
+                  'Que os teus hábitos te levem longe este ano 🔥',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: theme.textPrimary.withValues(alpha: 0.6),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ── Home header ───────────────────────────────────────────────────────────
 
-  Widget _buildHomeHeader() {
+  Widget _buildHomeHeader(ThemeProvider theme) {
     final name = _user?.displayName?.split(' ').first ?? 'strk';
     final photoUrl = _user?.photoURL;
 
@@ -294,17 +343,17 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         StrkHeader(
           subtitle: _getGreeting(name),
-          trailing: _buildAvatar(photoUrl, name, radius: 24),
+          trailing: _buildAvatar(photoUrl, name, theme, radius: 24),
         ),
         const SizedBox(height: 12),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Text(
             'Os teus\nhábitos.',
             style: TextStyle(
               fontSize: 36,
               fontWeight: FontWeight.w800,
-              color: kTextPrimary,
+              color: theme.textPrimary,
               letterSpacing: -1.5,
               height: 1.1,
             ),
@@ -314,7 +363,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildPageHeader(String title) {
+  Widget _buildPageHeader(String title, ThemeProvider theme) {
     final name = _user?.displayName?.split(' ').first ?? 'strk';
     final photoUrl = _user?.photoURL;
 
@@ -327,17 +376,17 @@ class _HomeScreenState extends State<HomeScreen> {
               context,
               MaterialPageRoute(builder: (_) => ProfileScreen(habits: habits)),
             ),
-            child: _buildAvatar(photoUrl, name, radius: 18),
+            child: _buildAvatar(photoUrl, name, theme, radius: 18),
           ),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
           child: Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.w800,
-              color: kTextPrimary,
+              color: theme.textPrimary,
               letterSpacing: -1,
             ),
           ),
@@ -346,7 +395,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildAvatar(String? photoUrl, String name, {double radius = 22}) {
+  Widget _buildAvatar(
+    String? photoUrl,
+    String name,
+    ThemeProvider theme, {
+    double radius = 22,
+  }) {
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
@@ -354,7 +408,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: CircleAvatar(
         radius: radius,
-        backgroundColor: const Color(0xFF2C2C2C),
+        backgroundColor: theme.surface,
         backgroundImage: photoUrl != null
             ? NetworkImage(photoUrl) as ImageProvider
             : null,
@@ -362,7 +416,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ? Text(
                 name.isNotEmpty ? name[0].toUpperCase() : 'S',
                 style: TextStyle(
-                  color: kFlameOrange,
+                  color: theme.accent,
                   fontSize: radius * 0.85,
                   fontWeight: FontWeight.w800,
                 ),
@@ -381,15 +435,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // ── Progress card ─────────────────────────────────────────────────────────
 
-  Widget _buildProgressCard() {
+  Widget _buildProgressCard(ThemeProvider theme) {
     final progress = habits.isEmpty ? 0.0 : completedCount / habits.length;
+    final accent = theme.accent;
     return Container(
       margin: const EdgeInsets.fromLTRB(24, 16, 24, 0),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [kFlameEmber, kFlameOrange, kFlameAmber],
-          stops: [0.0, 0.5, 1.0],
+        gradient: LinearGradient(
+          colors: [
+            accent.withValues(alpha: 0.9),
+            accent,
+            accent.withValues(alpha: 0.7),
+          ],
         ),
         borderRadius: BorderRadius.circular(20),
       ),
@@ -462,7 +520,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // ── Habits list ───────────────────────────────────────────────────────────
 
-  Widget _buildHabitsList() {
+  Widget _buildHabitsList(ThemeProvider theme) {
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
@@ -472,23 +530,23 @@ class _HomeScreenState extends State<HomeScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'HÁBITOS',
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: Color(0x4DFFFFFF),
+                    color: theme.textPrimary.withValues(alpha: 0.3),
                     letterSpacing: 0.8,
                   ),
                 ),
                 GestureDetector(
                   onTap: _addHabit,
-                  child: const Text(
+                  child: Text(
                     '+ Novo',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: kFlameOrange,
+                      color: theme.accent,
                       letterSpacing: 0.3,
                     ),
                   ),
@@ -501,7 +559,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.only(bottom: 100),
                 itemCount: habits.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 8),
-                itemBuilder: (_, i) => _buildHabitCard(habits[i]),
+                itemBuilder: (_, i) => _buildHabitCard(habits[i], theme),
               ),
             ),
           ],
@@ -510,7 +568,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildHabitCard(Habit habit) {
+  Widget _buildHabitCard(Habit habit, ThemeProvider theme) {
     return Dismissible(
       key: Key(habit.id),
       direction: DismissDirection.endToStart,
@@ -534,16 +592,16 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: GestureDetector(
         onTap: () => toggleHabit(habit),
-        onLongPress: () => _showEditDialog(habit),
+        onLongPress: () => _showEditDialog(habit, theme),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 250),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: kSurface,
+            color: theme.surface,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: habit.completedToday
-                  ? kFlameOrange.withValues(alpha: 0.35)
+                  ? theme.accent.withValues(alpha: 0.35)
                   : Colors.transparent,
               width: 1,
             ),
@@ -554,13 +612,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2C2C2C),
+                  color: theme.isLight
+                      ? theme.accent.withValues(alpha: 0.1)
+                      : const Color(0xFF2C2C2C),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
                   habit.icon,
                   size: 18,
-                  color: habit.completedToday ? kFlameOrange : Colors.white30,
+                  color: habit.completedToday
+                      ? theme.accent
+                      : theme.textPrimary.withValues(alpha: 0.2),
                 ),
               ),
               const SizedBox(width: 12),
@@ -574,8 +636,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: habit.completedToday
-                            ? kTextPrimary
-                            : Colors.white60,
+                            ? theme.textPrimary
+                            : theme.textPrimary.withValues(alpha: 0.5),
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -588,15 +650,15 @@ class _HomeScreenState extends State<HomeScreen> {
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                               color: habit.completedToday
-                                  ? kFlameOrange
-                                  : Colors.white24,
+                                  ? theme.accent
+                                  : theme.textPrimary.withValues(alpha: 0.2),
                             ),
                           ),
-                          const TextSpan(
+                          TextSpan(
                             text: ' seguidos',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.white24,
+                              color: theme.textPrimary.withValues(alpha: 0.2),
                             ),
                           ),
                         ],
@@ -611,11 +673,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 26,
                 decoration: BoxDecoration(
                   color: habit.completedToday
-                      ? kFlameOrange
+                      ? theme.accent
                       : Colors.transparent,
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: habit.completedToday ? kFlameOrange : Colors.white24,
+                    color: habit.completedToday
+                        ? theme.accent
+                        : theme.textPrimary.withValues(alpha: 0.2),
                     width: 1.5,
                   ),
                 ),
@@ -632,40 +696,53 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // ── Tab bar ───────────────────────────────────────────────────────────────
 
-  Widget _buildTabBar() {
+  Widget _buildTabBar(ThemeProvider theme) {
     return Container(
-      decoration: const BoxDecoration(
-        color: kBg,
-        border: Border(top: BorderSide(color: Color(0xFF222222), width: 0.5)),
+      decoration: BoxDecoration(
+        color: theme.bg,
+        border: Border(top: BorderSide(color: theme.divider, width: 0.5)),
       ),
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildTabItem(Icons.grid_view_rounded, 'Hoje', 0),
-          _buildTabItem(Icons.calendar_month_outlined, 'Calendário', 1),
-          _buildTabItem(Icons.bar_chart_rounded, 'Stats', 2),
-          _buildTabItem(Icons.person_outline_rounded, 'Perfil', 3),
+          _buildTabItem(Icons.grid_view_rounded, 'Hoje', 0, theme),
+          _buildTabItem(Icons.calendar_month_outlined, 'Calendário', 1, theme),
+          _buildTabItem(Icons.bar_chart_rounded, 'Stats', 2, theme),
+          _buildTabItem(Icons.person_outline_rounded, 'Perfil', 3, theme),
         ],
       ),
     );
   }
 
-  Widget _buildTabItem(IconData icon, String label, int index) {
+  Widget _buildTabItem(
+    IconData icon,
+    String label,
+    int index,
+    ThemeProvider theme,
+  ) {
     final active = _currentTab == index;
     return GestureDetector(
       onTap: () => setState(() => _currentTab = index),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 22, color: active ? kFlameOrange : Colors.white24),
+          Icon(
+            icon,
+            size: 22,
+            color: active
+                ? theme.accent
+                : theme.textPrimary.withValues(alpha: 0.25),
+          ),
           const SizedBox(height: 4),
           Text(
             label,
             style: TextStyle(
               fontSize: 9,
               fontWeight: FontWeight.w600,
-              color: active ? kFlameOrange : Colors.white24,
+              color: active
+                  ? theme.accent
+                  : theme.textPrimary.withValues(alpha: 0.25),
             ),
           ),
         ],
@@ -699,7 +776,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // ── Edit dialog ───────────────────────────────────────────────────────────
 
-  void _showEditDialog(Habit habit) {
+  void _showEditDialog(Habit habit, ThemeProvider theme) {
     final controller = TextEditingController(text: habit.name);
     bool reminderEnabled = habit.reminderEnabled;
     TimeOfDay reminderTime = TimeOfDay(
@@ -710,7 +787,7 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       builder: (_) => Dialog(
-        backgroundColor: kSurface,
+        backgroundColor: theme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -719,37 +796,36 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Editar hábito',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: kTextPrimary,
+                    color: theme.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: controller,
                   autofocus: true,
-                  style: const TextStyle(
-                    color: kTextPrimary,
+                  style: TextStyle(
+                    color: theme.textPrimary,
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                   ),
-                  cursorColor: kFlameOrange,
+                  cursorColor: theme.accent,
                   decoration: InputDecoration(
                     filled: true,
-                    fillColor: const Color(0xFF2C2C2C),
+                    fillColor: theme.isLight
+                        ? const Color(0xFFF0F0F0)
+                        : const Color(0xFF2C2C2C),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: kFlameOrange,
-                        width: 1,
-                      ),
+                      borderSide: BorderSide(color: theme.accent, width: 1),
                     ),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 14,
@@ -764,12 +840,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       value: reminderEnabled,
                       onChanged: (v) =>
                           setStateDialog(() => reminderEnabled = v),
-                      activeThumbColor: kFlameOrange,
+                      activeThumbColor: theme.accent,
                     ),
                     const SizedBox(width: 8),
-                    const Text(
+                    Text(
                       'Lembrete diário',
-                      style: TextStyle(color: kTextPrimary),
+                      style: TextStyle(color: theme.textPrimary),
                     ),
                     const Spacer(),
                     if (reminderEnabled)
@@ -783,7 +859,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         },
                         child: Text(
                           reminderTime.format(ctx),
-                          style: const TextStyle(color: kTextPrimary),
+                          style: TextStyle(color: theme.textPrimary),
                         ),
                       ),
                   ],
@@ -794,21 +870,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     Expanded(
                       child: GestureDetector(
                         onTap: () => Navigator.pop(ctx),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF2C2C2C),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Text(
-                            'Cancelar',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF888888),
-                            ),
-                          ),
+                        child: _dialogBtn(
+                          'Cancelar',
+                          theme.isLight
+                              ? const Color(0xFFE8E8E8)
+                              : const Color(0xFF2C2C2C),
+                          const Color(0xFF888888),
                         ),
                       ),
                     ),
@@ -841,21 +908,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           Navigator.pop(ctx);
                           setState(() {});
                         },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            color: kFlameOrange,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Text(
-                            'Guardar',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
+                        child: _dialogBtn(
+                          'Guardar',
+                          theme.accent,
+                          Colors.white,
                         ),
                       ),
                     ),
@@ -868,4 +924,17 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
+  Widget _dialogBtn(String label, Color bg, Color fg) => Container(
+    padding: const EdgeInsets.symmetric(vertical: 12),
+    decoration: BoxDecoration(
+      color: bg,
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Text(
+      label,
+      textAlign: TextAlign.center,
+      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: fg),
+    ),
+  );
 }

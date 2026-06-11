@@ -6,6 +6,9 @@ import 'habit.dart';
 class HabitService {
   static final _db = FirebaseFirestore.instance;
 
+  // Cached birthday for birthday banner (loaded on app start via loadUserProfile)
+  static DateTime? cachedBirthday;
+
   static final Map<String, IconData> _iconMap = {
     'water': Icons.water_drop_outlined,
     'fitness': Icons.fitness_center_outlined,
@@ -38,6 +41,8 @@ class HabitService {
 
   static CollectionReference get _habitsRef =>
       _db.collection('users').doc(_uid).collection('habits');
+
+  // ── Habits ─────────────────────────────────────────────────────────────────
 
   static Future<void> saveHabit(Habit habit) async {
     await _habitsRef.doc(habit.id).set({
@@ -92,6 +97,8 @@ class HabitService {
     await batch.commit();
   }
 
+  // ── Last open date ─────────────────────────────────────────────────────────
+
   static Future<String> getLastOpenDate() async {
     final doc = await _db.collection('users').doc(_uid).get();
     return doc.data()?['lastOpenDate'] ?? '';
@@ -107,6 +114,8 @@ class HabitService {
     final now = DateTime.now();
     return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
   }
+
+  // ── Daily logs ─────────────────────────────────────────────────────────────
 
   static Future<void> saveDailyLog(
     String habitId,
@@ -136,5 +145,39 @@ class HabitService {
       for (final doc in snapshot.docs)
         doc.id: (doc.data()['completed'] as bool? ?? false),
     };
+  }
+
+  // ── User profile (birthday) ────────────────────────────────────────────────
+
+  /// Loads the user profile from Firestore and caches the birthday locally.
+  /// Call this once after the user is authenticated (e.g. inside _loadHabits).
+  static Future<void> loadUserProfile() async {
+    try {
+      final doc = await _db.collection('users').doc(_uid).get();
+      final data = doc.data();
+      if (data == null) return;
+      final bdString = data['birthday'] as String?;
+      if (bdString != null) {
+        cachedBirthday = DateTime.tryParse(bdString);
+      }
+    } catch (_) {}
+  }
+
+  /// Saves the birthday to Firestore in ISO format (YYYY-MM-DD).
+  static Future<void> saveBirthday(DateTime date) async {
+    final iso =
+        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    await _db.collection('users').doc(_uid).set({
+      'birthday': iso,
+    }, SetOptions(merge: true));
+    cachedBirthday = date;
+  }
+
+  /// Removes the birthday from Firestore and clears the cache.
+  static Future<void> removeBirthday() async {
+    await _db.collection('users').doc(_uid).set({
+      'birthday': FieldValue.delete(),
+    }, SetOptions(merge: true));
+    cachedBirthday = null;
   }
 }
