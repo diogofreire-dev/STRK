@@ -229,8 +229,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     (wi) => Column(
                       children: List.generate(7, (di) {
                         final idx = wi * 7 + di;
-                        if (idx >= days.length)
+                        if (idx >= days.length) {
                           return const SizedBox(width: 18, height: 18);
+                        }
                         final date = days[idx];
                         final key = _dateKey(date);
                         final isToday = key == HabitService.todayString();

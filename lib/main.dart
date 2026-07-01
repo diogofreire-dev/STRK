@@ -335,7 +335,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // ── Home header ───────────────────────────────────────────────────────────
 
   Widget _buildHomeHeader(ThemeProvider theme) {
-    final name = _user?.displayName?.split(' ').first ?? 'strk';
+    final name = _user?.displayName?.split(' ').first ?? 'STRK';
     final photoUrl = _user?.photoURL;
 
     return Column(
