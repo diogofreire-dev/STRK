@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'theme_provider.dart';
+import 'strk_header.dart';
 
 class ThemeSettingsScreen extends StatelessWidget {
   const ThemeSettingsScreen({super.key});
@@ -24,54 +25,59 @@ class ThemeSettingsScreen extends StatelessWidget {
     final theme = ThemeProviderScope.of(context);
     return Scaffold(
       backgroundColor: theme.bg,
-      appBar: AppBar(
-        backgroundColor: theme.bg,
-        elevation: 0,
-        leading: GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: Icon(
-            Icons.arrow_back_ios_rounded,
-            color: theme.textSecondary,
-            size: 20,
-          ),
-        ),
-        title: Text(
-          'Aparência',
-          style: TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
-            color: theme.textPrimary,
-          ),
-        ),
-        centerTitle: true,
-      ),
-      body: AnimatedBuilder(
-        animation: theme,
-        builder: (context, _) => SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _label('TEMA', theme),
-              const SizedBox(height: 12),
-              _buildThemeSelector(theme),
-              const SizedBox(height: 32),
-              if (theme.mode == StrkThemeMode.custom) ...[
-                _label('FUNDO', theme),
-                const SizedBox(height: 12),
-                _buildBgSelector(theme),
-                const SizedBox(height: 32),
-                _label('COR DE DESTAQUE', theme),
-                const SizedBox(height: 12),
-                _buildColorGrid(theme),
-                const SizedBox(height: 32),
-              ],
-              _label('PRÉ-VISUALIZAÇÃO', theme),
-              const SizedBox(height: 12),
-              _buildPreview(theme),
-              const SizedBox(height: 32),
-            ],
-          ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            StrkHeader(
+              leading: GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Icon(
+                  Icons.arrow_back_ios_rounded,
+                  color: theme.textSecondary,
+                  size: 20,
+                ),
+              ),
+              trailing: Text(
+                'Aparência',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: theme.textPrimary,
+                ),
+              ),
+            ),
+            Expanded(
+              child: AnimatedBuilder(
+                animation: theme,
+                builder: (context, _) => SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _label('TEMA', theme),
+                      const SizedBox(height: 12),
+                      _buildThemeSelector(theme),
+                      const SizedBox(height: 32),
+                      if (theme.mode == StrkThemeMode.custom) ...[
+                        _label('FUNDO', theme),
+                        const SizedBox(height: 12),
+                        _buildBgSelector(theme),
+                        const SizedBox(height: 32),
+                        _label('COR DE DESTAQUE', theme),
+                        const SizedBox(height: 12),
+                        _buildColorGrid(theme),
+                        const SizedBox(height: 32),
+                      ],
+                      _label('PRÉ-VISUALIZAÇÃO', theme),
+                      const SizedBox(height: 12),
+                      _buildPreview(theme),
+                      const SizedBox(height: 32),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -235,7 +241,7 @@ class ThemeSettingsScreen extends StatelessWidget {
       itemCount: _presets.length,
       itemBuilder: (_, i) {
         final color = _presets[i];
-        final sel = theme.customAccent.value == color.value;
+        final sel = theme.customAccent.toARGB32() == color.toARGB32();
         return GestureDetector(
           onTap: () => theme.setCustomAccent(color),
           child: AnimatedContainer(

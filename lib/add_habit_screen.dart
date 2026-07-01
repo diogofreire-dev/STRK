@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'habit.dart';
 import 'theme_provider.dart';
-import 'strk_logo.dart';
+import 'strk_header.dart';
 
 class AddHabitScreen extends StatefulWidget {
   const AddHabitScreen({super.key});
@@ -51,74 +51,79 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
     final theme = ThemeProviderScope.of(context);
     return Scaffold(
       backgroundColor: theme.bg,
-      appBar: AppBar(
-        backgroundColor: theme.bg,
-        elevation: 0,
-        leading: GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: Icon(Icons.close, color: theme.textHint),
-        ),
-        title: const StrkLogo(height: 22),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+      body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Novo hábito',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w800,
-                color: theme.textPrimary,
-                letterSpacing: -1,
+            StrkHeader(
+              leading: GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Icon(Icons.close, color: theme.textHint),
               ),
             ),
-            const SizedBox(height: 24),
-            _buildLabel('Nome', theme),
-            const SizedBox(height: 10),
-            _buildNameField(theme),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Switch(
-                  value: _reminderEnabled,
-                  onChanged: (v) => setState(() => _reminderEnabled = v),
-                  activeThumbColor: theme.accent,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Lembrete diário',
-                  style: TextStyle(color: theme.textPrimary),
-                ),
-                const Spacer(),
-                if (_reminderEnabled)
-                  GestureDetector(
-                    onTap: () async {
-                      final t = await showTimePicker(
-                        context: context,
-                        initialTime: _reminderTime,
-                      );
-                      if (t != null) setState(() => _reminderTime = t);
-                    },
-                    child: Text(
-                      _reminderTime.format(context),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Novo hábito',
                       style: TextStyle(
-                        color: theme.accent,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        color: theme.textPrimary,
+                        letterSpacing: -1,
                       ),
                     ),
-                  ),
-              ],
+                    const SizedBox(height: 24),
+                    _buildLabel('Nome', theme),
+                    const SizedBox(height: 10),
+                    _buildNameField(theme),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Switch(
+                          value: _reminderEnabled,
+                          onChanged: (v) =>
+                              setState(() => _reminderEnabled = v),
+                          activeThumbColor: theme.accent,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Lembrete diário',
+                          style: TextStyle(color: theme.textPrimary),
+                        ),
+                        const Spacer(),
+                        if (_reminderEnabled)
+                          GestureDetector(
+                            onTap: () async {
+                              final t = await showTimePicker(
+                                context: context,
+                                initialTime: _reminderTime,
+                              );
+                              if (t != null) setState(() => _reminderTime = t);
+                            },
+                            child: Text(
+                              _reminderTime.format(context),
+                              style: TextStyle(
+                                color: theme.accent,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 28),
+                    _buildLabel('Ícone', theme),
+                    const SizedBox(height: 10),
+                    _buildIconGrid(theme),
+                    const SizedBox(height: 32),
+                    _buildSaveButton(theme),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
             ),
-            const SizedBox(height: 28),
-            _buildLabel('Ícone', theme),
-            const SizedBox(height: 10),
-            _buildIconGrid(theme),
-            const SizedBox(height: 32),
-            _buildSaveButton(theme),
-            const SizedBox(height: 16),
           ],
         ),
       ),
