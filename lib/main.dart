@@ -45,7 +45,7 @@ class StrkApp extends StatelessWidget {
         animation: themeProvider,
         builder: (context, _) {
           return MaterialApp(
-            title: 'Strk',
+            title: 'STRK',
             debugShowCheckedModeBanner: false,
             theme: themeProvider.themeData,
             home: StreamBuilder<User?>(
@@ -558,7 +558,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: ListView.separated(
                 padding: const EdgeInsets.only(bottom: 100),
                 itemCount: habits.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                separatorBuilder: (_, _) => const SizedBox(height: 8),
                 itemBuilder: (_, i) => _buildHabitCard(habits[i], theme),
               ),
             ),

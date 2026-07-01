@@ -1,11 +1,11 @@
 {
-    "name": "habit_tracker",
-    "short_name": "habit_tracker",
+    "name": "STRK",
+    "short_name": "STRK",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "STRK ajuda a criar hábitos, manter streaks e acompanhar o teu progresso.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
