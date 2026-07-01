@@ -1,6 +1,6 @@
 # Strk (habit_tracker)
 
-Aplicação Flutter para acompanhar hábitos com Firebase, autenticação Google e armazenamento de fotos de perfil.
+Aplicação Flutter para acompanhar hábitos com Firebase.
 
 ## Início rápido
 
