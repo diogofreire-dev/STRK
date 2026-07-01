@@ -70,7 +70,7 @@ class _LogoPainter extends CustomPainter {
     // Texto "strk"
     final tp = TextPainter(
       text: TextSpan(
-        text: 'strk',
+        text: 'STRK',
         style: TextStyle(
           color: text,
           fontSize: 26 * unit,
@@ -83,7 +83,7 @@ class _LogoPainter extends CustomPainter {
       textDirection: TextDirection.ltr,
     )..layout();
 
-    tp.paint(canvas, Offset(56 * unit, 28 * unit - tp.height));
+    tp.paint(canvas, Offset(48 * unit, 28 * unit - tp.height));
   }
 
   @override

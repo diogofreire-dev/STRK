@@ -3,10 +3,11 @@ import 'strk_logo.dart';
 import 'theme_provider.dart';
 
 class StrkHeader extends StatelessWidget {
+  final Widget? leading;
   final Widget? trailing;
   final String? subtitle;
 
-  const StrkHeader({super.key, this.trailing, this.subtitle});
+  const StrkHeader({super.key, this.leading, this.trailing, this.subtitle});
 
   @override
   Widget build(BuildContext context) {
@@ -16,6 +17,7 @@ class StrkHeader extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          if (leading != null) ...[leading!, const SizedBox(width: 12)],
           const StrkLogo(height: 26),
           const SizedBox(width: 10),
           if (subtitle != null)
@@ -33,7 +35,7 @@ class StrkHeader extends StatelessWidget {
             )
           else
             const Spacer(),
-          if (trailing != null) trailing!,
+          if (trailing != null) ...[trailing!],
         ],
       ),
     );

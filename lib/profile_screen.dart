@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'profile_service.dart';
 import 'badges_screen.dart';
 import 'habit.dart';
 import 'habit_service.dart';
 import 'theme_provider.dart';
+import 'strk_header.dart';
 import 'theme_settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -51,11 +51,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       final url = await ProfileService.uploadProfilePhoto(file);
       await ProfileService.saveProfilePhotoUrl(url);
-      if (mounted)
+      if (mounted) {
         setState(() {
           _photoUrl = url;
           _isUploading = false;
         });
+      }
     } catch (_) {
       _showMessage('Não foi possível carregar a foto.', isError: true);
       if (mounted) setState(() => _isUploading = false);
@@ -281,132 +282,140 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: theme.bg,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.only(bottom: 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SvgPicture.asset('assets/images/strk_logo.svg', height: 22),
-              const SizedBox(height: 20),
-              Text(
-                'Perfil',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                  color: theme.textPrimary,
-                  letterSpacing: -1,
-                ),
-              ),
-              const SizedBox(height: 20),
-              _buildProfileCard(name, email, photo, theme),
-              const SizedBox(height: 20),
-              if (widget.habits.isNotEmpty) ...[
-                _buildBadgesSection(
-                  unlockedBadges,
-                  unlockedCount,
-                  totalCount,
-                  badges,
-                  theme,
-                ),
-                const SizedBox(height: 20),
-              ],
-
-              // ── Conta ──────────────────────────────────────────────────
-              _buildSection('Conta', theme, [
-                if (photo != null)
-                  _buildTile(
-                    theme: theme,
-                    icon: Icons.delete_outline,
-                    label: 'Remover foto',
-                    value: 'Eliminar',
-                    valueColor: const Color(0xFFFF3B30),
-                    onTap: () => _confirmRemovePhoto(theme),
-                  ),
-                _buildTile(
-                  theme: theme,
-                  icon: Icons.person_outline_rounded,
-                  label: 'Nome',
-                  value: name,
-                  onTap: () => _editName(context, theme),
-                ),
-                _buildTile(
-                  theme: theme,
-                  icon: Icons.mail_outline_rounded,
-                  label: 'Email',
-                  value: email,
-                ),
-                if (_user?.emailVerified == false)
-                  _buildTile(
-                    theme: theme,
-                    icon: Icons.verified_outlined,
-                    label: 'Email não verificado',
-                    value: 'Reenviar email',
-                    valueColor: theme.accent,
-                    onTap: () async {
-                      await _user?.sendEmailVerification();
-                      if (context.mounted)
-                        _showMessage('Email de verificação enviado!');
-                    },
-                  ),
-                _buildTile(
-                  theme: theme,
-                  icon: Icons.cake_outlined,
-                  label: 'Aniversário',
-                  value: bdFormatted ?? 'Adicionar',
-                  valueColor: bdFormatted != null ? null : theme.accent,
-                  onTap: () => _pickBirthday(theme),
-                  trailingExtra: bdFormatted != null
-                      ? GestureDetector(
-                          onTap: () => _removeBirthday(theme),
-                          child: Icon(
-                            Icons.close_rounded,
-                            size: 16,
-                            color: theme.textPrimary.withValues(alpha: 0.3),
-                          ),
-                        )
-                      : null,
-                ),
-              ]),
-              const SizedBox(height: 16),
-
-              // ── Aparência ──────────────────────────────────────────────
-              _buildSection('Aparência', theme, [
-                _buildTile(
-                  theme: theme,
-                  icon: Icons.palette_outlined,
-                  label: 'Tema',
-                  value: _themeLabel(theme.mode),
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const ThemeSettingsScreen(),
-                    ),
-                  ),
-                ),
-              ]),
-              const SizedBox(height: 16),
-
-              // ── Sessão ──────────────────────────────────────────────────
-              _buildSection('Sessão', theme, [
-                _buildTile(
-                  theme: theme,
-                  icon: Icons.logout_rounded,
-                  label: 'Terminar sessão',
-                  valueColor: const Color(0xFFFF3B30),
-                  onTap: () => _confirmLogout(context, theme),
-                ),
-              ]),
+              const StrkHeader(),
               const SizedBox(height: 32),
-              Center(
-                child: Text(
-                  'strk v1.0.0',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: theme.textPrimary.withValues(alpha: 0.15),
-                    fontWeight: FontWeight.w500,
-                  ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Perfil',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        color: theme.textPrimary,
+                        letterSpacing: -1,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    _buildProfileCard(name, email, photo, theme),
+                    const SizedBox(height: 20),
+                    if (widget.habits.isNotEmpty) ...[
+                      _buildBadgesSection(
+                        unlockedBadges,
+                        unlockedCount,
+                        totalCount,
+                        badges,
+                        theme,
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+                    // ── Conta ──────────────────────────────────────────────────
+                    _buildSection('Conta', theme, [
+                      if (photo != null)
+                        _buildTile(
+                          theme: theme,
+                          icon: Icons.delete_outline,
+                          label: 'Remover foto',
+                          value: 'Eliminar',
+                          valueColor: const Color(0xFFFF3B30),
+                          onTap: () => _confirmRemovePhoto(theme),
+                        ),
+                      _buildTile(
+                        theme: theme,
+                        icon: Icons.person_outline_rounded,
+                        label: 'Nome',
+                        value: name,
+                        onTap: () => _editName(context, theme),
+                      ),
+                      _buildTile(
+                        theme: theme,
+                        icon: Icons.mail_outline_rounded,
+                        label: 'Email',
+                        value: email,
+                      ),
+                      if (_user?.emailVerified == false)
+                        _buildTile(
+                          theme: theme,
+                          icon: Icons.verified_outlined,
+                          label: 'Email não verificado',
+                          value: 'Reenviar email',
+                          valueColor: theme.accent,
+                          onTap: () async {
+                            await _user?.sendEmailVerification();
+                            if (context.mounted) {
+                              _showMessage('Email de verificação enviado!');
+                            }
+                          },
+                        ),
+                      _buildTile(
+                        theme: theme,
+                        icon: Icons.cake_outlined,
+                        label: 'Aniversário',
+                        value: bdFormatted ?? 'Adicionar',
+                        valueColor: bdFormatted != null ? null : theme.accent,
+                        onTap: () => _pickBirthday(theme),
+                        trailingExtra: bdFormatted != null
+                            ? GestureDetector(
+                                onTap: () => _removeBirthday(theme),
+                                child: Icon(
+                                  Icons.close_rounded,
+                                  size: 16,
+                                  color: theme.textPrimary.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                ),
+                              )
+                            : null,
+                      ),
+                    ]),
+                    const SizedBox(height: 16),
+                    // ── Aparência ──────────────────────────────────────────────
+                    _buildSection('Aparência', theme, [
+                      _buildTile(
+                        theme: theme,
+                        icon: Icons.palette_outlined,
+                        label: 'Tema',
+                        value: _themeLabel(theme.mode),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ThemeSettingsScreen(),
+                          ),
+                        ),
+                      ),
+                    ]),
+                    const SizedBox(height: 16),
+                    // ── Sessão ──────────────────────────────────────────────────
+                    _buildSection('Sessão', theme, [
+                      _buildTile(
+                        theme: theme,
+                        icon: Icons.logout_rounded,
+                        label: 'Terminar sessão',
+                        valueColor: const Color(0xFFFF3B30),
+                        onTap: () => _confirmLogout(context, theme),
+                      ),
+                    ]),
+                    const SizedBox(height: 32),
+                    Center(
+                      child: Text(
+                        'STRK v1.0.0',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: theme.textPrimary.withValues(alpha: 0.15),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
                 ),
               ),
-              const SizedBox(height: 8),
             ],
           ),
         ),
