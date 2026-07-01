@@ -26,6 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Precisamos de acesso à câmera para tirar fotos de perfil.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Precisamos de acesso à galeria para escolher uma foto de perfil.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

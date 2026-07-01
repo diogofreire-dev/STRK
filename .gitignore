@@ -53,3 +53,5 @@ app.*.map.json
 secrets/
 *.key
 *.pem
+android/key.properties
+android/app/upload-keystore.jks

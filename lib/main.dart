@@ -513,7 +513,89 @@ class _HomeScreenState extends State<HomeScreen> {
               valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
             ),
           ),
+          const SizedBox(height: 10),
+          Text(
+            'Pequenos passos todos os dias fazem a diferença ✨',
+            style: TextStyle(
+              fontSize: 12,
+              color: const Color(0xCCFFFFFF),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  // ── Empty state ─────────────────────────────────────────────────────────
+
+  Widget _buildEmptyState(ThemeProvider theme) {
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 18, 24, 0),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: theme.surface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: theme.accent.withValues(alpha: 0.18)),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: theme.accent.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(
+                  Icons.auto_awesome_rounded,
+                  color: theme.accent,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Começa hoje a tua rotina',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: theme.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Adiciona o teu primeiro hábito e dá o primeiro passo para uma rotina mais forte.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: theme.textPrimary.withValues(alpha: 0.6),
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 18),
+              ElevatedButton.icon(
+                onPressed: _addHabit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.accent,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 12,
+                  ),
+                ),
+                icon: const Icon(Icons.add_rounded, size: 18),
+                label: const Text('Adicionar hábito'),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -554,14 +636,17 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.only(bottom: 100),
-                itemCount: habits.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 8),
-                itemBuilder: (_, i) => _buildHabitCard(habits[i], theme),
+            if (habits.isEmpty)
+              _buildEmptyState(theme)
+            else
+              Expanded(
+                child: ListView.separated(
+                  padding: const EdgeInsets.only(bottom: 100),
+                  itemCount: habits.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 8),
+                  itemBuilder: (_, i) => _buildHabitCard(habits[i], theme),
+                ),
               ),
-            ),
           ],
         ),
       ),
