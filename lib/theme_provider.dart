@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -9,6 +10,7 @@ class ThemeProvider extends ChangeNotifier {
   static const _modeKey = 'theme_mode';
   static const _accentKey = 'theme_accent';
   static const _customBgKey = 'theme_custom_bg';
+  static const _userPrefix = 'theme_';
 
   StrkThemeMode _mode = StrkThemeMode.dark;
   Color _customAccent = const Color(0xFFFF6B00);
@@ -85,36 +87,68 @@ class ThemeProvider extends ChangeNotifier {
     dialogTheme: DialogThemeData(backgroundColor: surface),
   );
 
+  String _storageKey(String suffix) {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final userPart = uid ?? 'guest';
+    return '$_userPrefix$userPart.$suffix';
+  }
+
+  void applyPersistenceMap(Map<String, dynamic> values) {
+    if (values.containsKey('mode')) {
+      _mode = StrkThemeMode.values[(values['mode'] as int).clamp(0, 2)];
+    }
+    if (values.containsKey('accent')) {
+      _customAccent = Color(values['accent'] as int);
+    }
+    if (values.containsKey('customBg')) {
+      _customBg = CustomBgMode.values[(values['customBg'] as int).clamp(0, 1)];
+    }
+    notifyListeners();
+  }
+
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
-    _mode = StrkThemeMode.values[(prefs.getInt(_modeKey) ?? 0).clamp(0, 2)];
-    _customAccent = Color(prefs.getInt(_accentKey) ?? 0xFFFF6B00);
-    _customBg =
-        CustomBgMode.values[(prefs.getInt(_customBgKey) ?? 0).clamp(0, 1)];
-    notifyListeners();
+    final values = <String, dynamic>{};
+    final keys = [_modeKey, _accentKey, _customBgKey];
+    for (final key in keys) {
+      final scopedKey = _storageKey(key);
+      if (prefs.containsKey(scopedKey)) {
+        values[key] = prefs.get(scopedKey);
+      }
+    }
+    if (values.isEmpty) {
+      values['mode'] = prefs.getInt(_modeKey) ?? 0;
+      values['accent'] = prefs.getInt(_accentKey) ?? 0xFFFF6B00;
+      values['customBg'] = prefs.getInt(_customBgKey) ?? 0;
+    }
+    applyPersistenceMap({
+      'mode': values['mode'] ?? 0,
+      'accent': values['accent'] ?? 0xFFFF6B00,
+      'customBg': values['customBg'] ?? 0,
+    });
+  }
+
+  Future<void> _persist(String key, int value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_storageKey(key), value);
+    await prefs.setInt(key, value);
   }
 
   Future<void> setMode(StrkThemeMode mode) async {
     _mode = mode;
-    await SharedPreferences.getInstance().then(
-      (p) => p.setInt(_modeKey, mode.index),
-    );
+    await _persist(_modeKey, mode.index);
     notifyListeners();
   }
 
   Future<void> setCustomAccent(Color color) async {
     _customAccent = color;
-    await SharedPreferences.getInstance().then(
-      (p) => p.setInt(_accentKey, color.toARGB32()),
-    );
+    await _persist(_accentKey, color.toARGB32());
     notifyListeners();
   }
 
   Future<void> setCustomBg(CustomBgMode bg) async {
     _customBg = bg;
-    await SharedPreferences.getInstance().then(
-      (p) => p.setInt(_customBgKey, bg.index),
-    );
+    await _persist(_customBgKey, bg.index);
     notifyListeners();
   }
 }

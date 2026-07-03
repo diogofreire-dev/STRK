@@ -31,6 +31,8 @@ class StatsScreen extends StatelessWidget {
               _buildTodayCard(completed, total, progress, theme),
               const SizedBox(height: 16),
               _buildStatsGrid(bestStreak, avgStreak, theme),
+              const SizedBox(height: 16),
+              _buildInsightCard(theme, completed, total, progress),
               const SizedBox(height: 24),
               _sectionLabel('Hábitos por streak', theme),
               const SizedBox(height: 12),
@@ -63,23 +65,56 @@ class StatsScreen extends StatelessWidget {
     ThemeProvider theme,
   ) {
     final accent = theme.accent;
+    final message = progress >= 0.7
+        ? 'Estás num ótimo ritmo hoje.'
+        : progress >= 0.4
+        ? 'Quase lá — mais um passo e fechaste o dia.'
+        : 'Um dia de cada vez faz toda a diferença.';
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: accent,
+        gradient: LinearGradient(
+          colors: [accent, accent.withValues(alpha: 0.85)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'HOJE',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              color: Color(0x80FFFFFF),
-              letterSpacing: 1.2,
-            ),
+          Row(
+            children: [
+              const Text(
+                'HOJE',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0x80FFFFFF),
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: const Text(
+                  '✨ foco',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
           Row(
@@ -139,6 +174,80 @@ class StatsScreen extends StatelessWidget {
               minHeight: 6,
               backgroundColor: Colors.white24,
               valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            message,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Color(0xCCFFFFFF),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInsightCard(
+    ThemeProvider theme,
+    int completed,
+    int total,
+    double progress,
+  ) {
+    final title = completed == total && total > 0
+        ? 'Dia completo'
+        : completed > 0
+        ? 'Boas vibrações'
+        : 'Começa por um só hábito';
+    final subtitle = completed == total && total > 0
+        ? 'Hoje foi um dia de vitória. Mantém a energia.'
+        : progress > 0
+        ? 'Já conseguiste dar o primeiro passo hoje.'
+        : 'Escolhe um hábito simples e faz acontecer agora.';
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: theme.accent.withValues(alpha: 0.18)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: theme.accent.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(Icons.insights_rounded, color: theme.accent, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: theme.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: theme.textSecondary,
+                    height: 1.4,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -364,6 +473,13 @@ class StatsScreen extends StatelessWidget {
   }
 
   Widget _empty(String msg, ThemeProvider theme) => Center(
-    child: Text(msg, style: TextStyle(color: theme.textHint, fontSize: 14)),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      child: Text(
+        msg,
+        style: TextStyle(color: theme.textHint, fontSize: 14),
+        textAlign: TextAlign.center,
+      ),
+    ),
   );
 }
