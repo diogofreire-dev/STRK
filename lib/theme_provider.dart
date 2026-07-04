@@ -109,13 +109,19 @@ class ThemeProvider extends ChangeNotifier {
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
     final values = <String, dynamic>{};
-    final keys = [_modeKey, _accentKey, _customBgKey];
-    for (final key in keys) {
-      final scopedKey = _storageKey(key);
-      if (prefs.containsKey(scopedKey)) {
-        values[key] = prefs.get(scopedKey);
-      }
+
+    final scopedMode = _storageKey(_modeKey);
+    final scopedAccent = _storageKey(_accentKey);
+    final scopedCustomBg = _storageKey(_customBgKey);
+
+    if (prefs.containsKey(scopedMode)) values['mode'] = prefs.get(scopedMode);
+    if (prefs.containsKey(scopedAccent)) {
+      values['accent'] = prefs.get(scopedAccent);
     }
+    if (prefs.containsKey(scopedCustomBg)) {
+      values['customBg'] = prefs.get(scopedCustomBg);
+    }
+
     if (values.isEmpty) {
       values['mode'] = prefs.getInt(_modeKey) ?? 0;
       values['accent'] = prefs.getInt(_accentKey) ?? 0xFFFF6B00;
