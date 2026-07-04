@@ -114,6 +114,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadHabits() async {
     final loaded = await HabitService.loadHabits();
+    await HabitService.loadUserProfile();
     final lastDate = await HabitService.getLastOpenDate();
     final today = HabitService.todayString();
     final shouldReset = lastDate != today;
