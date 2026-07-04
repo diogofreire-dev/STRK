@@ -31,6 +31,14 @@ void main() async {
   final themeProvider = ThemeProvider();
   await themeProvider.load();
 
+  // O login (ou o restauro de sessão) acontece de forma assíncrona depois
+  // do arranque, por isso recarregamos o tema sempre que o utilizador
+  // autenticado muda — assim usamos sempre a chave correta (por uid) em
+  // vez de ficarmos presos no tema "guest".
+  FirebaseAuth.instance.authStateChanges().listen((_) {
+    themeProvider.load();
+  });
+
   runApp(StrkApp(themeProvider: themeProvider));
 }
 
