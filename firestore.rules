@@ -1,0 +1,51 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Documento raiz do utilizador: users/{uid}
+    // Guarda lastOpenDate, birthday, photoUrl, displayName
+    match /users/{uid} {
+      allow read, write: if isOwner(uid);
+
+      // Hábitos do utilizador: users/{uid}/habits/{habitId}
+      match /habits/{habitId} {
+        allow read, write: if isOwner(uid) && isValidHabit();
+
+        // Logs diários de um hábito: users/{uid}/habits/{habitId}/logs/{date}
+        match /logs/{date} {
+          allow read, write: if isOwner(uid) && isValidLog();
+        }
+      }
+    }
+
+    // Nega tudo o resto por omissão (comportamento default do Firestore,
+    // mas explícito aqui para clareza)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ── Helpers ────────────────────────────────────────────────────────────
+
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    function isValidHabit() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['id', 'name', 'icon', 'completedToday', 'streak'])
+        && data.name is string && data.name.size() <= 100
+        && data.icon is string
+        && data.completedToday is bool
+        && data.streak is int
+        && data.streak >= 0;
+    }
+
+    function isValidLog() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['completed', 'date'])
+        && data.completed is bool
+        && data.date is string;
+    }
+  }
+}
