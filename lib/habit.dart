@@ -20,4 +20,11 @@ class Habit {
     this.reminderHour,
     this.reminderMinute,
   });
+
+  /// Alterna a conclusão de hoje e ajusta o streak em conformidade:
+  /// marcar como feito soma 1, desmarcar subtrai 1.
+  void toggleCompletion() {
+    completedToday = !completedToday;
+    completedToday ? streak++ : streak--;
+  }
 }

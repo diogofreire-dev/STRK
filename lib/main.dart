@@ -180,10 +180,7 @@ class _HomeScreenState extends State<HomeScreen> {
           : loaded;
 
       if (shouldReset) {
-        for (final h in habits) {
-          if (!h.completedToday) h.streak = 0;
-          h.completedToday = false;
-        }
+        HabitService.applyDailyReset(habits);
       }
     });
 
@@ -322,8 +319,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void toggleHabit(Habit habit) {
     setState(() {
-      habit.completedToday = !habit.completedToday;
-      habit.completedToday ? habit.streak++ : habit.streak--;
+      habit.toggleCompletion();
     });
     HabitService.saveHabit(habit);
     HabitService.saveDailyLog(

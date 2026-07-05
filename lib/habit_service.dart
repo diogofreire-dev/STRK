@@ -115,6 +115,16 @@ class HabitService {
     return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
   }
 
+  /// Aplica o reset diário: hábitos não concluídos no dia anterior perdem o
+  /// streak; todos ficam marcados como "não concluídos hoje". Só deve ser
+  /// chamado quando `lastDate != today` (ver [getLastOpenDate]).
+  static void applyDailyReset(List<Habit> habits) {
+    for (final h in habits) {
+      if (!h.completedToday) h.streak = 0;
+      h.completedToday = false;
+    }
+  }
+
   // ── Daily logs ─────────────────────────────────────────────────────────────
 
   static Future<void> saveDailyLog(
