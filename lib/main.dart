@@ -19,6 +19,9 @@ import 'badges_screen.dart';
 import 'strk_header.dart';
 import 'theme_provider.dart';
 import 'onboarding_service.dart';
+import 'home/habit_card.dart';
+import 'home/progress_card.dart';
+import 'home/birthday_banner.dart';
 
 // Chave do site reCAPTCHA v3 para o App Check na versão Web.
 // Obtém-se em: Firebase Console > Build > App Check > Apps > STRK (Web) > reCAPTCHA v3
@@ -436,51 +439,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // ── Birthday banner ───────────────────────────────────────────────────────
 
   Widget _buildBirthdayBanner(ThemeProvider theme) {
-    final name = _user?.displayName?.split(' ').first ?? '';
-    return Container(
-      margin: const EdgeInsets.fromLTRB(24, 12, 24, 0),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            const Color(0xFFBF5AF2).withValues(alpha: 0.2),
-            const Color(0xFFFF6B00).withValues(alpha: 0.2),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: const Color(0xFFBF5AF2).withValues(alpha: 0.4),
-        ),
-      ),
-      child: Row(
-        children: [
-          const Text('🥳', style: TextStyle(fontSize: 24)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Feliz aniversário${name.isNotEmpty ? ', $name' : ''}!',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: theme.textPrimary,
-                  ),
-                ),
-                Text(
-                  'Que os teus hábitos te levem longe este ano 🔥',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: theme.textPrimary.withValues(alpha: 0.6),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+    return BirthdayBanner(theme: theme, displayName: _user?.displayName);
   }
 
   // ── Home header ───────────────────────────────────────────────────────────
@@ -587,94 +546,10 @@ class _HomeScreenState extends State<HomeScreen> {
   // ── Progress card ─────────────────────────────────────────────────────────
 
   Widget _buildProgressCard(ThemeProvider theme) {
-    final progress = habits.isEmpty ? 0.0 : completedCount / habits.length;
-    final accent = theme.accent;
-    return Container(
-      margin: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            accent.withValues(alpha: 0.9),
-            accent,
-            accent.withValues(alpha: 0.7),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'HOJE',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              color: Color(0x80FFFFFF),
-              letterSpacing: 1.2,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              RichText(
-                text: TextSpan(
-                  children: [
-                    TextSpan(
-                      text: '$completedCount',
-                      style: const TextStyle(
-                        fontSize: 42,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        letterSpacing: -2,
-                        height: 1,
-                      ),
-                    ),
-                    TextSpan(
-                      text: '/${habits.length}',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0x80FFFFFF),
-                        letterSpacing: -1,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Text(
-                '${(progress * 100).round()}% feito',
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: Color(0xCCFFFFFF),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(99),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 4,
-              backgroundColor: Colors.white24,
-              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'Pequenos passos todos os dias fazem a diferença ✨',
-            style: TextStyle(
-              fontSize: 12,
-              color: const Color(0xCCFFFFFF),
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
+    return ProgressCard(
+      theme: theme,
+      completedCount: completedCount,
+      totalCount: habits.length,
     );
   }
 
@@ -805,128 +680,16 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHabitCard(Habit habit, ThemeProvider theme) {
-    return Dismissible(
-      key: Key(habit.id),
-      direction: DismissDirection.endToStart,
-      onDismissed: (_) {
+    return HabitCard(
+      habit: habit,
+      theme: theme,
+      onToggle: () => toggleHabit(habit),
+      onLongPress: () => _showEditDialog(habit, theme),
+      onDismissed: () {
         HabitService.deleteHabit(habit.id);
         NotificationsService.cancelReminder(habit.id);
         setState(() => habits.remove(habit));
       },
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        decoration: BoxDecoration(
-          color: const Color(0x26FF3B30),
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: const Icon(
-          Icons.delete_outline_rounded,
-          color: Color(0xFFFF3B30),
-          size: 22,
-        ),
-      ),
-      child: GestureDetector(
-        onTap: () => toggleHabit(habit),
-        onLongPress: () => _showEditDialog(habit, theme),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            color: theme.surface,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: habit.completedToday
-                  ? theme.accent.withValues(alpha: 0.35)
-                  : Colors.transparent,
-              width: 1,
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: theme.isLight
-                      ? theme.accent.withValues(alpha: 0.1)
-                      : const Color(0xFF2C2C2C),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  habit.icon,
-                  size: 18,
-                  color: habit.completedToday
-                      ? theme.accent
-                      : theme.textPrimary.withValues(alpha: 0.2),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      habit.name,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: habit.completedToday
-                            ? theme.textPrimary
-                            : theme.textPrimary.withValues(alpha: 0.5),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    RichText(
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: '${habit.streak} dias',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: habit.completedToday
-                                  ? theme.accent
-                                  : theme.textPrimary.withValues(alpha: 0.2),
-                            ),
-                          ),
-                          TextSpan(
-                            text: ' seguidos',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: theme.textPrimary.withValues(alpha: 0.2),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                width: 26,
-                height: 26,
-                decoration: BoxDecoration(
-                  color: habit.completedToday
-                      ? theme.accent
-                      : Colors.transparent,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: habit.completedToday
-                        ? theme.accent
-                        : theme.textPrimary.withValues(alpha: 0.2),
-                    width: 1.5,
-                  ),
-                ),
-                child: habit.completedToday
-                    ? const Icon(Icons.check, size: 14, color: Colors.white)
-                    : null,
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 
