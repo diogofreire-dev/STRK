@@ -22,6 +22,9 @@ import 'onboarding_service.dart';
 import 'home/habit_card.dart';
 import 'home/progress_card.dart';
 import 'home/birthday_banner.dart';
+import 'home/tab_bar.dart';
+import 'home/onboarding_dialog.dart';
+import 'home/edit_habit_dialog.dart';
 
 // Chave do site reCAPTCHA v3 para o App Check na versão Web.
 // Obtém-se em: Firebase Console > Build > App Check > Apps > STRK (Web) > reCAPTCHA v3
@@ -210,114 +213,8 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!shouldShow || !mounted) return;
     _onboardingShown = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _showOnboardingDialog();
+      if (mounted) showOnboardingDialog(context);
     });
-  }
-
-  Future<void> _showOnboardingDialog() async {
-    final theme = ThemeProviderScope.of(context);
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        backgroundColor: theme.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-        contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: theme.accent.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(Icons.auto_awesome_rounded, color: theme.accent),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Bem-vindo ao STRK',
-                style: TextStyle(
-                  color: theme.textPrimary,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Pequenos hábitos constam mais do que grandes intenções.',
-              style: TextStyle(
-                color: theme.textSecondary,
-                fontSize: 13,
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 14),
-            _buildOnboardingTip(
-              'Marca um hábito e vê o teu streak crescer.',
-              theme,
-            ),
-            const SizedBox(height: 8),
-            _buildOnboardingTip(
-              'Volta todos os dias para manter o ritmo.',
-              theme,
-            ),
-            const SizedBox(height: 8),
-            _buildOnboardingTip(
-              'Usa o calendário para acompanhar o teu progresso.',
-              theme,
-            ),
-          ],
-        ),
-        actions: [
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () async {
-                await OnboardingService.completeOnboarding();
-                if (context.mounted) Navigator.of(context).pop();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.accent,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-              child: const Text('Começar'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOnboardingTip(String text, ThemeProvider theme) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(Icons.check_circle_rounded, color: theme.accent, size: 18),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            style: TextStyle(
-              color: theme.textPrimary,
-              fontSize: 13,
-              height: 1.4,
-            ),
-          ),
-        ),
-      ],
-    );
   }
 
   void toggleHabit(Habit habit) {
@@ -357,7 +254,11 @@ class _HomeScreenState extends State<HomeScreen> {
               child: const Icon(Icons.add, size: 28),
             )
           : null,
-      bottomNavigationBar: _buildTabBar(theme),
+      bottomNavigationBar: StrkTabBar(
+        currentTab: _currentTab,
+        onTabSelected: (i) => setState(() => _currentTab = i),
+        theme: theme,
+      ),
     );
   }
 
@@ -684,68 +585,17 @@ class _HomeScreenState extends State<HomeScreen> {
       habit: habit,
       theme: theme,
       onToggle: () => toggleHabit(habit),
-      onLongPress: () => _showEditDialog(habit, theme),
+      onLongPress: () => showEditHabitDialog(
+        context: context,
+        habit: habit,
+        theme: theme,
+        onSaved: () => setState(() {}),
+      ),
       onDismissed: () {
         HabitService.deleteHabit(habit.id);
         NotificationsService.cancelReminder(habit.id);
         setState(() => habits.remove(habit));
       },
-    );
-  }
-
-  // ── Tab bar ───────────────────────────────────────────────────────────────
-
-  Widget _buildTabBar(ThemeProvider theme) {
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.bg,
-        border: Border(top: BorderSide(color: theme.divider, width: 0.5)),
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildTabItem(Icons.grid_view_rounded, 'Hoje', 0, theme),
-          _buildTabItem(Icons.calendar_month_outlined, 'Calendário', 1, theme),
-          _buildTabItem(Icons.bar_chart_rounded, 'Stats', 2, theme),
-          _buildTabItem(Icons.person_outline_rounded, 'Perfil', 3, theme),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTabItem(
-    IconData icon,
-    String label,
-    int index,
-    ThemeProvider theme,
-  ) {
-    final active = _currentTab == index;
-    return GestureDetector(
-      onTap: () => setState(() => _currentTab = index),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 22,
-            color: active
-                ? theme.accent
-                : theme.textPrimary.withValues(alpha: 0.25),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 9,
-              fontWeight: FontWeight.w600,
-              color: active
-                  ? theme.accent
-                  : theme.textPrimary.withValues(alpha: 0.25),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -772,168 +622,4 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
   }
-
-  // ── Edit dialog ───────────────────────────────────────────────────────────
-
-  void _showEditDialog(Habit habit, ThemeProvider theme) {
-    final controller = TextEditingController(text: habit.name);
-    bool reminderEnabled = habit.reminderEnabled;
-    TimeOfDay reminderTime = TimeOfDay(
-      hour: habit.reminderHour ?? 8,
-      minute: habit.reminderMinute ?? 0,
-    );
-
-    showDialog(
-      context: context,
-      builder: (_) => Dialog(
-        backgroundColor: theme.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: StatefulBuilder(
-            builder: (ctx, setStateDialog) => Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Editar hábito',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: theme.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: controller,
-                  autofocus: true,
-                  style: TextStyle(
-                    color: theme.textPrimary,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  cursorColor: theme.accent,
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: theme.isLight
-                        ? const Color(0xFFF0F0F0)
-                        : const Color(0xFF2C2C2C),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: theme.accent, width: 1),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 12,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Switch(
-                      value: reminderEnabled,
-                      onChanged: (v) =>
-                          setStateDialog(() => reminderEnabled = v),
-                      activeThumbColor: theme.accent,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Lembrete diário',
-                      style: TextStyle(color: theme.textPrimary),
-                    ),
-                    const Spacer(),
-                    if (reminderEnabled)
-                      GestureDetector(
-                        onTap: () async {
-                          final t = await showTimePicker(
-                            context: ctx,
-                            initialTime: reminderTime,
-                          );
-                          if (t != null) setStateDialog(() => reminderTime = t);
-                        },
-                        child: Text(
-                          reminderTime.format(ctx),
-                          style: TextStyle(color: theme.textPrimary),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => Navigator.pop(ctx),
-                        child: _dialogBtn(
-                          'Cancelar',
-                          theme.isLight
-                              ? const Color(0xFFE8E8E8)
-                              : const Color(0xFF2C2C2C),
-                          const Color(0xFF888888),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          if (controller.text.trim().isEmpty) return;
-                          setState(() => habit.name = controller.text.trim());
-                          habit.reminderEnabled = reminderEnabled;
-                          habit.reminderHour = reminderEnabled
-                              ? reminderTime.hour
-                              : null;
-                          habit.reminderMinute = reminderEnabled
-                              ? reminderTime.minute
-                              : null;
-                          HabitService.saveHabit(habit);
-                          if (habit.reminderEnabled &&
-                              habit.reminderHour != null) {
-                            NotificationsService.scheduleDailyReminder(
-                              habit.id,
-                              habit.reminderHour!,
-                              habit.reminderMinute!,
-                              'Lembra-te de: ${habit.name}',
-                              'Não te esqueças do teu hábito diário.',
-                            );
-                          } else {
-                            NotificationsService.cancelReminder(habit.id);
-                          }
-                          Navigator.pop(ctx);
-                          setState(() {});
-                        },
-                        child: _dialogBtn(
-                          'Guardar',
-                          theme.accent,
-                          Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _dialogBtn(String label, Color bg, Color fg) => Container(
-    padding: const EdgeInsets.symmetric(vertical: 12),
-    decoration: BoxDecoration(
-      color: bg,
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: Text(
-      label,
-      textAlign: TextAlign.center,
-      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: fg),
-    ),
-  );
 }
