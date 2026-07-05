@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'notifications_service.dart';
 import 'firebase_options.dart';
@@ -42,6 +43,17 @@ void main() async {
 
   if (!kIsWeb) {
     await GoogleSignIn.instance.initialize();
+
+    // Crashlytics não está disponível na Web/Windows, só em
+    // Android/iOS/macOS. Isto envia automaticamente para o Firebase
+    // qualquer erro não tratado do Flutter e da própria Dart VM.
+    FlutterError.onError = (errorDetails) {
+      FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+    };
+    PlatformDispatcher.instance.onError = (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    };
   }
 
   await NotificationsService.init();
