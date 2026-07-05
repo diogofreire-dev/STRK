@@ -52,12 +52,11 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyAA4Tm9m3a1kF2SQ3k1hLu9H9fcBJh-36A',
-    appId: '1:882100728991:android:79489912848861e878deaa',
+    appId: '1:882100728991:android:35d4050e26720a7778deaa',
     messagingSenderId: '882100728991',
     projectId: 'strk-thebestone',
     storageBucket: 'strk-thebestone.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyBHMIbBADpJQtojigUDKS9NOnInl4Z1XS8',
     appId: '1:882100728991:ios:3c8cf39611fc07de78deaa',
@@ -67,7 +66,6 @@ class DefaultFirebaseOptions {
     iosClientId: '882100728991-k7m9cc27hpt6g0l670hamsk9dgq2qfbb.apps.googleusercontent.com',
     iosBundleId: 'com.example.habitTracker',
   );
-
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyBHMIbBADpJQtojigUDKS9NOnInl4Z1XS8',
     appId: '1:882100728991:ios:3c8cf39611fc07de78deaa',
