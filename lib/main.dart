@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'notifications_service.dart';
 import 'firebase_options.dart';
@@ -18,9 +19,26 @@ import 'strk_header.dart';
 import 'theme_provider.dart';
 import 'onboarding_service.dart';
 
+// Chave do site reCAPTCHA v3 para o App Check na versão Web.
+// Obtém-se em: Firebase Console > Build > App Check > Apps > STRK (Web) > reCAPTCHA v3
+// Sem isto preenchido, o App Check na Web não funciona (mas Android/iOS/macOS não precisam disto).
+const String kAppCheckWebRecaptchaSiteKey = 'COLA_AQUI_A_TUA_SITE_KEY';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // App Check tem de ser ativado logo a seguir ao Firebase.initializeApp(),
+  // antes de qualquer outro serviço (Auth, Firestore, Storage, Messaging) ser usado.
+  // Em debug usamos os "debug providers" (precisam de um token registado na
+  // consola); em release usamos os providers reais de cada plataforma.
+  await FirebaseAppCheck.instance.activate(
+    androidProvider: kDebugMode
+        ? AndroidProvider.debug
+        : AndroidProvider.playIntegrity,
+    appleProvider: kDebugMode ? AppleProvider.debug : AppleProvider.appAttest,
+    webProvider: ReCaptchaV3Provider(kAppCheckWebRecaptchaSiteKey),
+  );
 
   if (!kIsWeb) {
     await GoogleSignIn.instance.initialize();
