@@ -9,6 +9,7 @@ import 'habit_service.dart';
 import 'theme_provider.dart';
 import 'strk_header.dart';
 import 'theme_settings_screen.dart';
+import 'profile/badges_section.dart';
 
 class ProfileScreen extends StatefulWidget {
   final List<Habit> habits;
@@ -306,12 +307,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _buildProfileCard(name, email, photo, theme),
                     const SizedBox(height: 20),
                     if (widget.habits.isNotEmpty) ...[
-                      _buildBadgesSection(
-                        unlockedBadges,
-                        unlockedCount,
-                        totalCount,
-                        badges,
-                        theme,
+                      BadgesSection(
+                        unlockedBadges: unlockedBadges,
+                        unlockedCount: unlockedCount,
+                        totalCount: totalCount,
+                        allBadges: badges,
+                        theme: theme,
                       ),
                       const SizedBox(height: 20),
                     ],
