@@ -1,22 +1,17 @@
-import java.util.Properties
-
-plugins {
-    id("com.android.application")
-    // START: FlutterFire Configuration
-    id("com.google.gms.google-services")
-    id("com.google.firebase.crashlytics")
-    // END: FlutterFire Configuration
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
-    id("dev.flutter.flutter-gradle-plugin")
-}
-
-val keystorePropertiesFile = rootProject.file("key.properties")
-val keystoreProperties = Properties()
-if (keystorePropertiesFile.exists()) {
-    keystoreProperties.load(keystorePropertiesFile.inputStream())
-}
+// Relocaliza a pasta de build de cada módulo Android para <projeto>/build/<módulo>,
+// em vez do padrão <módulo>/build. O Flutter espera este layout para conseguir
+// encontrar o .apk/.aab gerado — sem isto, o Gradle compila com sucesso mas o
+// Flutter não encontra o ficheiro final.
+val newBuildDir: Directory = rootProject.layout.buildDirectory.dir("../../build").get()
+rootProject.layout.buildDirectory.value(newBuildDir)
 
 subprojects {
+    val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
+    project.layout.buildDirectory.value(newSubprojectBuildDir)
+
+    // Tem de ficar aqui, ANTES do evaluationDependsOn(":app") mais abaixo —
+    // caso contrário o Gradle já avaliou o projeto quando tentamos registar
+    // este afterEvaluate, e rebenta com "project is already evaluated".
     afterEvaluate {
         if (name == "flutter_local_notifications") {
             extensions.findByType(com.android.build.gradle.LibraryExtension::class.java)?.apply {
@@ -26,54 +21,10 @@ subprojects {
     }
 }
 
-android {
-    namespace = "com.strk.habittracker"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    defaultConfig {
-        applicationId = "com.strk.habittracker"
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
-    }
-
-    signingConfigs {
-        create("release") {
-            if (keystorePropertiesFile.exists()) {
-                keyAlias = keystoreProperties["keyAlias"] as String?
-                keyPassword = keystoreProperties["keyPassword"] as String?
-                storeFile = file(keystoreProperties["storeFile"] as String)
-                storePassword = keystoreProperties["storePassword"] as String?
-            }
-        }
-    }
-
-    buildTypes {
-        release {
-            signingConfig = if (keystorePropertiesFile.exists()) {
-                signingConfigs.getByName("release")
-            } else {
-                signingConfigs.getByName("debug")
-            }
-            isMinifyEnabled = true
-            isShrinkResources = true
-        }
-    }
+subprojects {
+    project.evaluationDependsOn(":app")
 }
 
-kotlin {
-    compilerOptions {
-        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
-    }
-}
-
-flutter {
-    source = "../.."
+tasks.register<Delete>("clean") {
+    delete(rootProject.layout.buildDirectory)
 }

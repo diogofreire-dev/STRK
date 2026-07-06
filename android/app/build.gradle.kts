@@ -2,8 +2,10 @@ import java.util.Properties
 
 plugins {
     id("com.android.application")
+    id("org.jetbrains.kotlin.android")
     // START: FlutterFire Configuration
     id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
     // END: FlutterFire Configuration
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
@@ -13,16 +15,6 @@ val keystorePropertiesFile = rootProject.file("key.properties")
 val keystoreProperties = Properties()
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(keystorePropertiesFile.inputStream())
-}
-
-subprojects {
-    afterEvaluate {
-        if (name == "flutter_local_notifications") {
-            extensions.findByType(com.android.build.gradle.LibraryExtension::class.java)?.apply {
-                namespace = "com.dexterous.flutterlocalnotifications"
-            }
-        }
-    }
 }
 
 android {
