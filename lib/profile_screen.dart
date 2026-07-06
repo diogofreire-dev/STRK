@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:image_picker/image_picker.dart';
 import 'profile_service.dart';
 import 'badges_screen.dart';
@@ -400,13 +399,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         label: 'Terminar sessão',
                         valueColor: const Color(0xFFFF3B30),
                         onTap: () => _confirmLogout(context, theme),
-                      ),
-                      // TEMPORÁRIO — só para testar o Crashlytics. Remover depois de confirmar.
-                      _buildTile(
-                        theme: theme,
-                        icon: Icons.bug_report_rounded,
-                        label: 'Testar Crashlytics (TEMP)',
-                        onTap: () => FirebaseCrashlytics.instance.crash(),
                       ),
                     ]),
                     const SizedBox(height: 32),
