@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Fundo do ícone adaptativo (Android 8+). Igual ao bg do tema escuro
+         da app (theme_provider.dart -> ThemeProvider.bg no modo escuro). -->
+    <color name="ic_launcher_background">#0D0D0D</color>
+</resources>
