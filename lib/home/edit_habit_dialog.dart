@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../habit.dart';
 import '../habit_service.dart';
-import '../notifications_service.dart';
 import '../theme_provider.dart';
 
 /// Diálogo de edição de um hábito (nome + lembrete diário).
@@ -132,18 +131,6 @@ void showEditHabitDialog({
                             ? reminderTime.minute
                             : null;
                         HabitService.saveHabit(habit);
-                        if (habit.reminderEnabled &&
-                            habit.reminderHour != null) {
-                          NotificationsService.scheduleDailyReminder(
-                            habit.id,
-                            habit.reminderHour!,
-                            habit.reminderMinute!,
-                            'Lembra-te de: ${habit.name}',
-                            'Não te esqueças do teu hábito diário.',
-                          );
-                        } else {
-                          NotificationsService.cancelReminder(habit.id);
-                        }
                         Navigator.pop(ctx);
                         onSaved();
                       },

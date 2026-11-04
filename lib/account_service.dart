@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'habit_service.dart';
 import 'notifications_service.dart';
+import 'reminder_service.dart';
 
 /// Operações sobre a conta inteira: terminar sessão e eliminar a conta com
 /// todos os dados (exigido pela App Store e pelo RGPD).
@@ -21,6 +22,7 @@ class AccountService {
     // O token FCM tem de sair antes do signOut: depois disso já não temos
     // permissão para escrever no documento do utilizador.
     await NotificationsService.removeFcmTokenForCurrentUser();
+    await ReminderService.cancelAll();
     if (!kIsWeb) await GoogleSignIn.instance.signOut();
     await FirebaseAuth.instance.signOut();
   }
@@ -61,6 +63,7 @@ class AccountService {
       await HabitService.deleteHabit(habit.id);
     }
     await userRef.delete();
+    await ReminderService.cancelAll();
 
     if (!kIsWeb) await GoogleSignIn.instance.signOut();
     await user.delete();
