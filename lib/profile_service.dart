@@ -35,6 +35,7 @@ class ProfileService {
     final ref = _storage.ref('users/$_uid/profile_photo_$timestamp.$extension');
     final uploadTask = ref.putData(bytes, metadata);
     final snapshot = await uploadTask;
+    await _deletePhotos(except: ref.fullPath);
     return snapshot.ref.getDownloadURL();
   }
 
@@ -59,7 +60,17 @@ class ProfileService {
     if (user == null) return;
     await user.updatePhotoURL(null);
     await _saveUserDocument({'photoUrl': FieldValue.delete()});
+    await _deletePhotos();
     await user.reload();
+  }
+
+  /// Cada upload tem um nome novo (timestamp), por isso as fotos antigas
+  /// ficavam esquecidas no Storage. Apaga todas menos [except].
+  static Future<void> _deletePhotos({String? except}) async {
+    final list = await _storage.ref('users/$_uid').listAll();
+    await Future.wait(
+      list.items.where((r) => r.fullPath != except).map((r) => r.delete()),
+    );
   }
 
   static Future<void> _saveUserDocument(Map<String, dynamic> data) async {

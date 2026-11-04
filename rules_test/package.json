@@ -1,0 +1,13 @@
+{
+  "name": "strk-rules-test",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "emulators": "firebase emulators:exec --only firestore,storage --project demo-strk \"npm test\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^4.0.1",
+    "firebase": "^11.10.0"
+  }
+}

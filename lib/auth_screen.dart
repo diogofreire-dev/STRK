@@ -22,6 +22,50 @@ class _AuthScreenState extends State<AuthScreen> {
   String? _error;
   String? _success;
 
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmController.dispose();
+    super.dispose();
+  }
+
+  /// Envia o email de recuperação. A mensagem é a mesma quer o email exista
+  /// quer não, para não revelar a quem tenta adivinhar que contas existem.
+  Future<void> _resetPassword() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      setState(() {
+        _error = 'Escreve o teu email para recuperares a password.';
+        _success = null;
+      });
+      return;
+    }
+    setState(() {
+      _isLoading = true;
+      _error = null;
+      _success = null;
+    });
+    const sent =
+        'Se existir uma conta com este email, vais receber um link para '
+        'definir uma nova password.';
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      if (mounted) setState(() => _success = sent);
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        if (e.code == 'user-not-found') {
+          _success = sent;
+        } else {
+          _error = _friendlyError(e.code);
+        }
+      });
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   Future<void> _submit() async {
     setState(() {
       _isLoading = true;
@@ -39,12 +83,12 @@ class _AuthScreenState extends State<AuthScreen> {
       if (_isLogin) {
         await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
+          password: _passwordController.text,
         );
       } else {
         final cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
+          password: _passwordController.text,
         );
         await cred.user?.sendEmailVerification();
         setState(() {
@@ -101,6 +145,10 @@ class _AuthScreenState extends State<AuthScreen> {
         return 'Email inválido.';
       case 'invalid-credential':
         return 'Email ou password incorretos.';
+      case 'too-many-requests':
+        return 'Demasiadas tentativas. Espera um pouco e tenta outra vez.';
+      case 'network-request-failed':
+        return 'Sem ligação à internet.';
       default:
         return 'Ocorreu um erro. Tenta novamente.';
     }
@@ -139,6 +187,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 toggleObscure: () =>
                     setState(() => _obscurePassword = !_obscurePassword),
               ),
+              if (_isLogin) _buildForgotPassword(theme),
               if (!_isLogin) ...[
                 const SizedBox(height: 12),
                 _buildField(
@@ -310,6 +359,18 @@ class _AuthScreenState extends State<AuthScreen> {
                 letterSpacing: -0.3,
               ),
             ),
+    ),
+  );
+
+  Widget _buildForgotPassword(ThemeProvider theme) => Align(
+    alignment: Alignment.centerRight,
+    child: TextButton(
+      onPressed: _isLoading ? null : _resetPassword,
+      style: TextButton.styleFrom(foregroundColor: theme.accent),
+      child: const Text(
+        'Esqueceste-te da password?',
+        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+      ),
     ),
   );
 

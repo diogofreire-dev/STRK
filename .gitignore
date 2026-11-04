@@ -58,3 +58,9 @@ android/app/upload-keystore.jks
 android/build/
 build/
 ios/.crashlytics/
+
+# Testes das regras Firebase
+rules_test/node_modules/
+firebase-debug.log
+firestore-debug.log
+rules_test/*-debug.log
