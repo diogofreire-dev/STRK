@@ -276,7 +276,7 @@ class StatsScreen extends StatelessWidget {
         child: _statCard(
           'Melhor streak',
           '$bestStreak',
-          'dias',
+          bestStreak == 1 ? 'dia' : 'dias',
           Icons.local_fire_department_rounded,
           theme.accent,
           theme,

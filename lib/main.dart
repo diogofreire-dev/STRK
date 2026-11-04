@@ -29,6 +29,7 @@ import 'home/onboarding_dialog.dart';
 import 'home/edit_habit_dialog.dart';
 import 'home/celebrations.dart';
 import 'mascot.dart';
+import 'transitions.dart';
 
 // Chave do site reCAPTCHA v3 para o App Check na versão Web.
 // Obtém-se em: Firebase Console > Build > App Check > Apps > STRK (Web) > reCAPTCHA v3
@@ -102,14 +103,24 @@ class StrkApp extends StatelessWidget {
             home: StreamBuilder<User?>(
               stream: FirebaseAuth.instance.authStateChanges(),
               builder: (context, snapshot) {
+                final Widget page;
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Scaffold(
+                  page = Scaffold(
+                    key: const ValueKey('loading'),
                     backgroundColor: themeProvider.bg,
                     body: const MascotLoader(),
                   );
+                } else if (snapshot.hasData) {
+                  page = const HomeScreen(key: ValueKey('home'));
+                } else {
+                  page = const AuthScreen(key: ValueKey('auth'));
                 }
-                if (snapshot.hasData) return const HomeScreen();
-                return const AuthScreen();
+                // Entrar e sair da conta passa a ser um cruzamento suave
+                // em vez de um corte seco.
+                return AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 450),
+                  child: page,
+                );
               },
             ),
           );
@@ -265,7 +276,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       backgroundColor: theme.bg,
       body: Stack(
         children: [
-          _buildTabContent(theme),
+          DirectionalTabSwitcher(
+            index: _currentTab,
+            child: _buildTabContent(theme),
+          ),
           Positioned.fill(
             child: ConfettiOverlay(
               trigger: _confettiTrigger,
@@ -425,10 +439,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       children: [
         StrkHeader(
           trailing: GestureDetector(
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => ProfileScreen(habits: habits)),
-            ),
+            // O perfil já é um separador: ir para lá em vez de o abrir
+            // por cima (ficava duplicado na pilha de navegação).
+            onTap: () => setState(() => _currentTab = 3),
             child: _buildAvatar(photoUrl, name, theme, radius: 18),
           ),
         ),
@@ -455,10 +468,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     double radius = 22,
   }) {
     return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => ProfileScreen(habits: habits)),
-      ),
+      onTap: () => setState(() => _currentTab = 3),
       child: CircleAvatar(
         radius: radius,
         backgroundColor: theme.surface,
@@ -601,7 +611,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   padding: const EdgeInsets.only(bottom: 100),
                   itemCount: habits.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 8),
-                  itemBuilder: (_, i) => _buildHabitCard(habits[i], theme),
+                  itemBuilder: (_, i) => StaggeredEntrance(
+                    key: ValueKey('entrada-${habits[i].id}'),
+                    index: i,
+                    child: _buildHabitCard(habits[i], theme),
+                  ),
                 ),
               ),
           ],
@@ -702,7 +716,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Future<void> _addHabit() async {
     final newHabit = await Navigator.push<Habit>(
       context,
-      MaterialPageRoute(builder: (_) => const AddHabitScreen()),
+      sheetRoute(const AddHabitScreen()),
     );
     if (newHabit != null) {
       setState(() => habits.add(newHabit));
