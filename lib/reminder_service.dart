@@ -144,8 +144,7 @@ class ReminderService {
   static String _body(Habit h, int offset) {
     // Hoje sabemos o streak que está em risco; nos dias seguintes não.
     if (offset == 0 && h.streak > 0) {
-      final dias = h.streak == 1 ? '1 dia' : '${h.streak} dias';
-      return '🔥 Vais em $dias seguidos. Não deixes o streak cair hoje.';
+      return 'Vais em ${dias(h.streak)} seguidos. Não deixes o streak cair hoje.';
     }
     return 'Ainda vais a tempo. Marca o hábito de hoje no STRK.';
   }

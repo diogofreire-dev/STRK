@@ -7,26 +7,26 @@ String? streakMilestone(String habitName, int streak) {
     case 3:
       return '3 dias de $habitName. Já é um começo a sério.';
     case 7:
-      return 'Uma semana inteira de $habitName! 🔥';
+      return 'Uma semana inteira de $habitName!';
     case 14:
       return 'Duas semanas de $habitName. Isto já é rotina.';
     case 30:
-      return '30 dias de $habitName. Um mês sem falhar! 🏆';
+      return '30 dias de $habitName. Um mês sem falhar!';
     case 50:
       return '50 dias de $habitName. Poucos chegam aqui.';
     case 100:
-      return '100 dias de $habitName. Lendário. 💯';
+      return '100 dias de $habitName. Lendário.';
     case 365:
-      return 'Um ano inteiro de $habitName. 👑';
+      return 'Um ano inteiro de $habitName.';
   }
   return null;
 }
 
 /// Frase do cartão "HOJE" conforme o progresso do dia.
 String progressMessage(int done, int total) {
-  if (total == 0) return 'Adiciona um hábito para começar ✨';
+  if (total == 0) return 'Adiciona um hábito para começar.';
   if (done == 0) return 'O dia ainda está todo por fazer.';
-  if (done == total) return 'Dia perfeito. Amanhã há mais 🔥';
+  if (done == total) return 'Dia perfeito. Amanhã há mais.';
   if (total - done == 1) return 'Só falta um. Vai lá!';
   if (done * 2 >= total) return 'Mais de metade feito. Bom ritmo.';
   return 'Bom arranque. Continua.';

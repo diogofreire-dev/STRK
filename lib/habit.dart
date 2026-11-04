@@ -9,6 +9,9 @@ String dateKey(DateTime d) =>
 /// para não falhar nos dias de mudança de hora (23h ou 25h).
 DateTime previousDay(DateTime d) => DateTime(d.year, d.month, d.day - 1);
 
+/// "1 dia" / "5 dias".
+String dias(int n) => n == 1 ? '1 dia' : '$n dias';
+
 class Habit {
   final String id;
   String name;

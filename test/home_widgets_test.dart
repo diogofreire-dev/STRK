@@ -73,7 +73,7 @@ void main() {
         ),
       );
       expect(find.text('4 dias'), findsOneWidget);
-      expect(find.text('🔥'), findsOneWidget);
+      expect(find.byIcon(Icons.local_fire_department_rounded), findsOneWidget);
     });
 
     testWidgets('1 dia fica no singular', (tester) async {

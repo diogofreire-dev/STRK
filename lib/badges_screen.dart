@@ -381,7 +381,7 @@ class BadgesScreen extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             unlocked == total
-                ? 'Desbloqueaste todas as conquistas! 🏆'
+                ? 'Desbloqueaste todas as conquistas!'
                 : 'Faltam ${total - unlocked} conquistas para completar.',
             style: TextStyle(fontSize: 12, color: theme.textHint),
           ),
