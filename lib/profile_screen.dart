@@ -11,6 +11,7 @@ import 'theme_provider.dart';
 import 'strk_header.dart';
 import 'theme_settings_screen.dart';
 import 'profile/badges_section.dart';
+import 'tappable.dart';
 
 class ProfileScreen extends StatefulWidget {
   final List<Habit> habits;
@@ -223,7 +224,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Row(
               children: [
                 Expanded(
-                  child: GestureDetector(
+                  child: Tappable(
                     onTap: () => Navigator.pop(ctx, false),
                     child: _dialogBtn(
                       'Cancelar',
@@ -236,7 +237,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: GestureDetector(
+                  child: Tappable(
                     onTap: () => Navigator.pop(ctx, true),
                     child: _dialogBtn(confirmLabel, confirmColor, Colors.white),
                   ),
@@ -363,7 +364,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         valueColor: bdFormatted != null ? null : theme.accent,
                         onTap: () => _pickBirthday(theme),
                         trailingExtra: bdFormatted != null
-                            ? GestureDetector(
+                            ? Tappable(
                                 onTap: () => _removeBirthday(theme),
                                 child: Icon(
                                   Icons.close_rounded,
@@ -459,7 +460,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       child: Row(
         children: [
-          GestureDetector(
+          Tappable(
             onTap: () async {
               final source = await _showPhotoSourceDialog(theme);
               if (source != null) await _pickProfilePhoto(source);
@@ -602,7 +603,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     VoidCallback? onTap,
     Widget? trailingExtra,
   }) {
-    return GestureDetector(
+    return Tappable(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -709,7 +710,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: GestureDetector(
+                    child: Tappable(
                       onTap: () => Navigator.pop(ctx),
                       child: _dialogBtn(
                         'Cancelar',
@@ -722,7 +723,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: GestureDetector(
+                    child: Tappable(
                       onTap: () async {
                         final n = controller.text.trim();
                         if (n.isEmpty) return;
@@ -779,7 +780,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: GestureDetector(
+                    child: Tappable(
                       onTap: () => Navigator.pop(ctx),
                       child: _dialogBtn(
                         'Cancelar',
@@ -792,7 +793,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: GestureDetector(
+                    child: Tappable(
                       onTap: () async {
                         // Fecha também o ecrã de perfil, se foi aberto por
                         // cima da home, para não ficar visível sem sessão.
@@ -900,7 +901,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: GestureDetector(
+                    child: Tappable(
                       onTap: () => Navigator.pop(ctx, false),
                       child: _dialogBtn(
                         'Cancelar',
@@ -911,7 +912,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: GestureDetector(
+                    child: Tappable(
                       onTap: () => Navigator.pop(ctx, true),
                       child: _dialogBtn(
                         'Eliminar',

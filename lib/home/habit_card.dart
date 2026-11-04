@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../habit.dart';
 import '../../theme_provider.dart';
+import '../tappable.dart';
 
 /// Cartão de um hábito na lista do ecrã principal.
 ///
@@ -108,7 +109,7 @@ class _HabitCardState extends State<HabitCard>
         excludeSemantics: true,
         onTap: _handleTap,
         onLongPress: widget.onLongPress,
-        child: GestureDetector(
+        child: Tappable(
           onTapDown: (_) => setState(() => _pressed = true),
           onTapCancel: () => setState(() => _pressed = false),
           onTapUp: (_) => setState(() => _pressed = false),

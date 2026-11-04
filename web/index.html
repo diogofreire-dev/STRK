@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-PT">
 <head>
   <!--
     If you are serving your web app in a path other than the root, change the
@@ -18,7 +18,16 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="STRK é a app para criar hábitos, manter streaks e transformar pequenos passos em rotina.">
+  <meta name="theme-color" content="#0D0D0D">
+
+  <!-- Pré-visualização quando o link é partilhado -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="STRK, os teus hábitos em chama">
+  <meta property="og:description" content="Cria hábitos, mantém streaks e vê a tua chama crescer todos os dias.">
+  <meta property="og:image" content="icons/Icon-512.png">
+  <meta name="twitter:card" content="summary">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -31,8 +40,38 @@
 
   <title>STRK</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- Enquanto o Flutter carrega: fundo escuro e a mascote, em vez de uma
+       página branca. Desaparece no primeiro frame do Flutter. -->
+  <style>
+    html, body { margin: 0; background: #0D0D0D; height: 100%; }
+    #strk-loading {
+      position: fixed; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 14px;
+      font: 600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: rgba(232, 232, 232, 0.5); transition: opacity .3s ease;
+    }
+    #strk-loading img { width: 110px; height: 110px; animation: respira 2.4s ease-in-out infinite; }
+    @keyframes respira {
+      0%, 100% { transform: scale(1, 1); }
+      50% { transform: scale(0.97, 1.04); }
+    }
+    @media (prefers-reduced-motion: reduce) { #strk-loading img { animation: none; } }
+  </style>
 </head>
 <body>
+  <div id="strk-loading" role="status">
+    <img src="assets/assets/mascot/pensar.png" alt="">
+    <span>A acender…</span>
+  </div>
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      var el = document.getElementById('strk-loading');
+      if (!el) return;
+      el.style.opacity = '0';
+      setTimeout(function () { el.remove(); }, 300);
+    });
+  </script>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader

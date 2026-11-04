@@ -5,6 +5,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'theme_provider.dart';
 import 'strk_logo.dart';
 import 'mascot.dart';
+import 'tappable.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -279,7 +280,7 @@ class _AuthScreenState extends State<AuthScreen> {
       hintStyle: TextStyle(color: theme.textHint),
       prefixIcon: Icon(icon, color: theme.textHint, size: 18),
       suffixIcon: toggleObscure != null
-          ? GestureDetector(
+          ? Tappable(
               onTap: toggleObscure,
               child: Icon(
                 obscure
@@ -342,7 +343,7 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
-  Widget _buildSubmitButton(ThemeProvider theme) => GestureDetector(
+  Widget _buildSubmitButton(ThemeProvider theme) => Tappable(
     onTap: _isLoading ? null : _submit,
     child: Container(
       width: double.infinity,
@@ -401,7 +402,7 @@ class _AuthScreenState extends State<AuthScreen> {
     ],
   );
 
-  Widget _buildGoogleButton(ThemeProvider theme) => GestureDetector(
+  Widget _buildGoogleButton(ThemeProvider theme) => Tappable(
     onTap: _isLoading ? null : _signInWithGoogle,
     child: Container(
       width: double.infinity,
@@ -443,7 +444,7 @@ class _AuthScreenState extends State<AuthScreen> {
         _isLogin ? 'Não tens conta? ' : 'Já tens conta? ',
         style: TextStyle(color: theme.textSecondary, fontSize: 13),
       ),
-      GestureDetector(
+      Tappable(
         onTap: () => setState(() {
           _isLogin = !_isLogin;
           _error = null;
