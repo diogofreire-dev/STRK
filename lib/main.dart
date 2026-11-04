@@ -135,6 +135,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   User? _user;
   bool _onboardingShown = false;
   String? _currentDay;
+  // Enquanto os hábitos não chegam do Firestore não mostramos o estado
+  // vazio ("Começa hoje a tua rotina"), que piscava a cada arranque.
+  bool _loading = true;
   int _confettiTrigger = 0;
   late final StreamSubscription<User?> _userSubscription;
 
@@ -158,14 +161,25 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _loadHabits() async {
-    await HabitService.loadUserProfile();
-    final lastDate = await HabitService.getLastOpenDate();
-    final loaded = await HabitService.loadHabits(lastOpenDate: lastDate);
+    final String lastDate;
+    final List<Habit> loaded;
+    try {
+      await HabitService.loadUserProfile();
+      lastDate = await HabitService.getLastOpenDate();
+      loaded = await HabitService.loadHabits(lastOpenDate: lastDate);
+    } catch (e) {
+      debugPrint('Falha ao carregar hábitos: $e');
+      if (!mounted) return;
+      setState(() => _loading = false);
+      _showToast('Não foi possível carregar os hábitos. Verifica a ligação.');
+      return;
+    }
     final today = HabitService.todayString();
 
     if (!mounted) return;
     setState(() {
       habits = loaded;
+      _loading = false;
       _refreshDay();
     });
 
@@ -290,8 +304,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             children: [
               _buildHomeHeader(theme),
               if (_isBirthday) _buildBirthdayBanner(theme),
-              _buildProgressCard(theme),
-              _buildHabitsList(theme),
+              if (_loading)
+                Expanded(
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: theme.accent,
+                      strokeWidth: 2,
+                    ),
+                  ),
+                )
+              else ...[
+                _buildProgressCard(theme),
+                _buildHabitsList(theme),
+              ],
             ],
           ),
         );
