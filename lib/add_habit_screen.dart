@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'habit.dart';
+import 'habit_icons.dart';
 import 'theme_provider.dart';
 import 'strk_header.dart';
 
@@ -14,21 +15,6 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
   IconData _selectedIcon = Icons.star_outline_rounded;
   bool _reminderEnabled = false;
   TimeOfDay _reminderTime = const TimeOfDay(hour: 8, minute: 0);
-
-  final List<Map<String, dynamic>> _icons = [
-    {'icon': Icons.water_drop_outlined, 'label': 'Água'},
-    {'icon': Icons.fitness_center_outlined, 'label': 'Exercício'},
-    {'icon': Icons.menu_book_outlined, 'label': 'Leitura'},
-    {'icon': Icons.self_improvement_outlined, 'label': 'Meditação'},
-    {'icon': Icons.bedtime_outlined, 'label': 'Sono'},
-    {'icon': Icons.restaurant_outlined, 'label': 'Dieta'},
-    {'icon': Icons.code_outlined, 'label': 'Código'},
-    {'icon': Icons.music_note_outlined, 'label': 'Música'},
-    {'icon': Icons.directions_run_outlined, 'label': 'Corrida'},
-    {'icon': Icons.favorite_outline_rounded, 'label': 'Saúde'},
-    {'icon': Icons.lightbulb_outline_rounded, 'label': 'Aprender'},
-    {'icon': Icons.star_outline_rounded, 'label': 'Outro'},
-  ];
 
   void _save() {
     if (_nameController.text.trim().isEmpty) return;
@@ -178,28 +164,38 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
       crossAxisSpacing: 10,
       mainAxisSpacing: 10,
     ),
-    itemCount: _icons.length,
+    itemCount: habitIcons.length,
     itemBuilder: (_, index) {
-      final item = _icons[index];
-      final isSelected = _selectedIcon == item['icon'];
-      return GestureDetector(
-        onTap: () => setState(() => _selectedIcon = item['icon']),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? theme.accent.withValues(alpha: 0.15)
-                : theme.surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isSelected ? theme.accent : Colors.transparent,
-              width: 1,
+      final item = habitIcons[index];
+      final isSelected = _selectedIcon == item.icon;
+      // O nome do ícone não aparece no ecrã, mas é lido pelo leitor de ecrã
+      // e aparece ao manter premido.
+      return Tooltip(
+        message: item.label,
+        child: Semantics(
+          button: true,
+          selected: isSelected,
+          label: item.label,
+          child: GestureDetector(
+            onTap: () => setState(() => _selectedIcon = item.icon),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? theme.accent.withValues(alpha: 0.15)
+                    : theme.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isSelected ? theme.accent : Colors.transparent,
+                  width: 1,
+                ),
+              ),
+              child: Icon(
+                item.icon,
+                size: 20,
+                color: isSelected ? theme.accent : theme.textHint,
+              ),
             ),
-          ),
-          child: Icon(
-            item['icon'] as IconData,
-            size: 20,
-            color: isSelected ? theme.accent : theme.textHint,
           ),
         ),
       );
