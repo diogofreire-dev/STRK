@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'habit.dart';
 import 'habit_service.dart';
+import 'mascot.dart';
 import 'theme_provider.dart';
 
 class CalendarScreen extends StatefulWidget {
@@ -73,11 +74,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 _buildLegend(theme),
                 const SizedBox(height: 16),
                 _loading
-                    ? Center(
-                        child: CircularProgressIndicator(
-                          color: theme.accent,
-                          strokeWidth: 2,
-                        ),
+                    ? const MascotLoader(
+                        message: 'A ler o histórico…',
+                        size: 80,
                       )
                     : _buildHeatmap(theme),
                 const SizedBox(height: 24),

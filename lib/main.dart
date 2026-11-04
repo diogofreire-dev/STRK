@@ -28,6 +28,7 @@ import 'home/tab_bar.dart';
 import 'home/onboarding_dialog.dart';
 import 'home/edit_habit_dialog.dart';
 import 'home/celebrations.dart';
+import 'mascot.dart';
 
 // Chave do site reCAPTCHA v3 para o App Check na versão Web.
 // Obtém-se em: Firebase Console > Build > App Check > Apps > STRK (Web) > reCAPTCHA v3
@@ -104,11 +105,7 @@ class StrkApp extends StatelessWidget {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Scaffold(
                     backgroundColor: themeProvider.bg,
-                    body: Center(
-                      child: CircularProgressIndicator(
-                        color: themeProvider.accent,
-                      ),
-                    ),
+                    body: const MascotLoader(),
                   );
                 }
                 if (snapshot.hasData) return const HomeScreen();
@@ -145,6 +142,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // As poses da mascote ficam em memória antes de serem precisas.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) StrkMascot.precache(context);
+    });
     _user = FirebaseAuth.instance.currentUser;
     _userSubscription = FirebaseAuth.instance.userChanges().listen((user) {
       if (!mounted) return;
@@ -307,13 +308,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               _buildHomeHeader(theme),
               if (_isBirthday) _buildBirthdayBanner(theme),
               if (_loading)
-                Expanded(
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      color: theme.accent,
-                      strokeWidth: 2,
-                    ),
-                  ),
+                const Expanded(
+                  child: MascotLoader(message: 'A carregar os teus hábitos…'),
                 )
               else ...[
                 _buildProgressCard(theme),
@@ -517,20 +513,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: theme.accent.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(
-                  Icons.auto_awesome_rounded,
-                  color: theme.accent,
-                  size: 28,
-                ),
-              ),
-              const SizedBox(height: 16),
+              const StrkMascot(mood: MascotMood.feliz, size: 120),
+              const SizedBox(height: 12),
               Text(
                 'Começa hoje a tua rotina',
                 style: TextStyle(

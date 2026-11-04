@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'theme_provider.dart';
 import 'strk_logo.dart';
+import 'mascot.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -227,15 +228,27 @@ class _AuthScreenState extends State<AuthScreen> {
   Widget _buildTitle(ThemeProvider theme) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(
-        _isLogin ? 'Bem-vindo\nde volta.' : 'Cria a tua\nconta.',
-        style: TextStyle(
-          fontSize: 36,
-          fontWeight: FontWeight.w800,
-          color: theme.textPrimary,
-          letterSpacing: -1.5,
-          height: 1.1,
-        ),
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Expanded(
+            child: Text(
+              _isLogin ? 'Bem-vindo\nde volta.' : 'Cria a tua\nconta.',
+              style: TextStyle(
+                fontSize: 36,
+                fontWeight: FontWeight.w800,
+                color: theme.textPrimary,
+                letterSpacing: -1.5,
+                height: 1.1,
+              ),
+            ),
+          ),
+          // Erro no login: a mascote fica apagada até voltares a tentar.
+          StrkMascot(
+            mood: _error != null ? MascotMood.apagada : MascotMood.feliz,
+            size: 96,
+          ),
+        ],
       ),
       const SizedBox(height: 8),
       Text(

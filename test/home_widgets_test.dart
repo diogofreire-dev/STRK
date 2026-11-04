@@ -128,12 +128,14 @@ void main() {
     await tester.pumpWidget(
       _wrap(ProgressCard(theme: theme, completedCount: 3, totalCount: 4)),
     );
-    await tester.pumpAndSettle();
+    // A mascote respira em ciclo infinito, por isso o pumpAndSettle nunca
+    // acabaria: avançamos o relógio o suficiente para a barra chegar ao fim.
+    await tester.pump(const Duration(seconds: 1));
     final bar = tester.widget<LinearProgressIndicator>(
       find.byType(LinearProgressIndicator),
     );
     expect(bar.value, closeTo(0.75, 0.001));
-    expect(find.text('75% feito'), findsOneWidget);
+    expect(find.text('75%'), findsOneWidget);
     expect(find.textContaining('Só falta um'), findsOneWidget);
   });
 
