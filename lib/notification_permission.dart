@@ -34,7 +34,7 @@ Future<bool?> _showExplanation(BuildContext context, ThemeProvider theme) =>
       context: context,
       builder: (ctx) => _PermissionDialog(
         theme: theme,
-        emoji: '🔔',
+        icon: Icons.notifications_active_rounded,
         title: 'Queres que a STRK te lembre?',
         body:
             'Só te avisamos dos hábitos que ainda não fizeste, à hora que '
@@ -49,7 +49,7 @@ Future<void> _showSettingsHint(BuildContext context, ThemeProvider theme) =>
       context: context,
       builder: (ctx) => _PermissionDialog(
         theme: theme,
-        emoji: '🔕',
+        icon: Icons.notifications_off_rounded,
         title: 'As notificações estão desligadas',
         body:
             'Para receberes lembretes, ativa as notificações da STRK nas '
@@ -60,7 +60,7 @@ Future<void> _showSettingsHint(BuildContext context, ThemeProvider theme) =>
 
 class _PermissionDialog extends StatelessWidget {
   final ThemeProvider theme;
-  final String emoji;
+  final IconData icon;
   final String title;
   final String body;
   final String primary;
@@ -68,7 +68,7 @@ class _PermissionDialog extends StatelessWidget {
 
   const _PermissionDialog({
     required this.theme,
-    required this.emoji,
+    required this.icon,
     required this.title,
     required this.body,
     required this.primary,
@@ -93,7 +93,7 @@ class _PermissionDialog extends StatelessWidget {
                 color: theme.accent.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Text(emoji, style: const TextStyle(fontSize: 26)),
+              child: Icon(icon, size: 28, color: theme.accent),
             ),
             const SizedBox(height: 16),
             Text(
