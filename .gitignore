@@ -64,3 +64,6 @@ rules_test/node_modules/
 firebase-debug.log
 firestore-debug.log
 rules_test/*-debug.log
+
+# Cópias de segurança automáticas do Blender
+*.blend1
