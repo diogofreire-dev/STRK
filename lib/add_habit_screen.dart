@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'habit.dart';
 import 'habit_icons.dart';
+import 'notification_permission.dart';
 import 'theme_provider.dart';
 import 'strk_header.dart';
 
@@ -70,8 +71,15 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                       children: [
                         Switch(
                           value: _reminderEnabled,
-                          onChanged: (v) =>
-                              setState(() => _reminderEnabled = v),
+                          onChanged: (v) async {
+                            // Ligar pede a permissão (com explicação); se a
+                            // pessoa recusar, o switch fica desligado.
+                            if (v &&
+                                !await ensureNotificationPermission(context)) {
+                              return;
+                            }
+                            setState(() => _reminderEnabled = v);
+                          },
                           activeThumbColor: theme.accent,
                         ),
                         const SizedBox(width: 8),
