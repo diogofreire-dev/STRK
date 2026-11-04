@@ -59,21 +59,23 @@ class DefaultFirebaseOptions {
   );
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyBHMIbBADpJQtojigUDKS9NOnInl4Z1XS8',
-    appId: '1:882100728991:ios:3c8cf39611fc07de78deaa',
+    appId: '1:882100728991:ios:a252944273f1ef7678deaa',
     messagingSenderId: '882100728991',
     projectId: 'strk-thebestone',
     storageBucket: 'strk-thebestone.firebasestorage.app',
-    iosClientId: '882100728991-k7m9cc27hpt6g0l670hamsk9dgq2qfbb.apps.googleusercontent.com',
-    iosBundleId: 'com.example.habitTracker',
+    androidClientId: '882100728991-e62f41bqouvkcqiad4ghs9bklciklijp.apps.googleusercontent.com',
+    iosClientId: '882100728991-easb3tjgdqkogjji9o9abbdncsf498c1.apps.googleusercontent.com',
+    iosBundleId: 'com.strk.habittracker',
   );
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyBHMIbBADpJQtojigUDKS9NOnInl4Z1XS8',
-    appId: '1:882100728991:ios:3c8cf39611fc07de78deaa',
+    appId: '1:882100728991:ios:a252944273f1ef7678deaa',
     messagingSenderId: '882100728991',
     projectId: 'strk-thebestone',
     storageBucket: 'strk-thebestone.firebasestorage.app',
-    iosClientId: '882100728991-k7m9cc27hpt6g0l670hamsk9dgq2qfbb.apps.googleusercontent.com',
-    iosBundleId: 'com.example.habitTracker',
+    androidClientId: '882100728991-e62f41bqouvkcqiad4ghs9bklciklijp.apps.googleusercontent.com',
+    iosClientId: '882100728991-easb3tjgdqkogjji9o9abbdncsf498c1.apps.googleusercontent.com',
+    iosBundleId: 'com.strk.habittracker',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
