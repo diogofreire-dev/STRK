@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../onboarding_service.dart';
+import '../mascot.dart';
 import '../theme_provider.dart';
 
 /// Diálogo de boas-vindas mostrado na primeira utilização da app.
@@ -15,25 +16,17 @@ Future<void> showOnboardingDialog(BuildContext context) async {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
       contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
-      title: Row(
+      title: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: theme.accent.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(Icons.auto_awesome_rounded, color: theme.accent),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              'Bem-vindo ao STRK',
-              style: TextStyle(
-                color: theme.textPrimary,
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-              ),
+          const StrkMascot(mood: MascotMood.festa, size: 110),
+          const SizedBox(height: 8),
+          Text(
+            'Bem-vindo ao STRK',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: theme.textPrimary,
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
             ),
           ),
         ],
@@ -43,7 +36,7 @@ Future<void> showOnboardingDialog(BuildContext context) async {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Pequenos hábitos constam mais do que grandes intenções.',
+            'Eu sou a chama dos teus hábitos. Cada dia que cumpres, cresço um bocadinho.',
             style: TextStyle(
               color: theme.textSecondary,
               fontSize: 13,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme_provider.dart';
 import 'celebrations.dart';
+import '../../mascot.dart';
 
 /// Cartão "HOJE" com o progresso do dia (quantos hábitos concluídos de
 /// quantos no total). A barra, o número e a percentagem animam quando o
@@ -92,12 +93,20 @@ class ProgressCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Text(
-                '${(progress * 100).round()}% feito',
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: Color(0xCCFFFFFF),
-                  fontWeight: FontWeight.w600,
+              const Spacer(),
+              // A chama acompanha o dia: apagada sem nada feito, feliz a
+              // meio e em festa no dia perfeito. O círculo escuro dá-lhe
+              // contraste em cima do laranja do cartão.
+              Container(
+                width: 78,
+                height: 78,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.black.withValues(alpha: 0.16),
+                ),
+                child: StrkMascot(
+                  mood: MascotMood.forProgress(completedCount, totalCount),
+                  size: 78,
                 ),
               ),
             ],
@@ -119,17 +128,36 @@ class ProgressCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            child: Text(
-              progressMessage(completedCount, totalCount),
-              key: ValueKey(progressMessage(completedCount, totalCount)),
-              style: const TextStyle(
-                fontSize: 12,
-                color: Color(0xCCFFFFFF),
-                fontWeight: FontWeight.w600,
+          Row(
+            children: [
+              Expanded(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  // Por omissão o AnimatedSwitcher centra o texto.
+                  layoutBuilder: (current, previous) => Stack(
+                    alignment: Alignment.centerLeft,
+                    children: [...previous, ?current],
+                  ),
+                  child: Text(
+                    progressMessage(completedCount, totalCount),
+                    key: ValueKey(progressMessage(completedCount, totalCount)),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xCCFFFFFF),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
               ),
-            ),
+              Text(
+                '${(progress * 100).round()}%',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Color(0xCCFFFFFF),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
           ),
         ],
       ),
