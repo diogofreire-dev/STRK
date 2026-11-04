@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'transitions.dart';
 
 enum StrkThemeMode { dark, light, custom }
 
@@ -85,6 +86,7 @@ class ThemeProvider extends ChangeNotifier {
     progressIndicatorTheme: ProgressIndicatorThemeData(color: accent),
     appBarTheme: AppBarTheme(backgroundColor: bg, elevation: 0),
     dialogTheme: DialogThemeData(backgroundColor: surface),
+    pageTransitionsTheme: strkPageTransitions,
   );
 
   String _storageKey(String suffix) {
