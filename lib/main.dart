@@ -28,6 +28,7 @@ import 'home/tab_bar.dart';
 import 'home/onboarding_dialog.dart';
 import 'home/edit_habit_dialog.dart';
 import 'home/celebrations.dart';
+import 'l10n.dart';
 import 'mascot.dart';
 import 'transitions.dart';
 
@@ -99,6 +100,9 @@ class StrkApp extends StatelessWidget {
           return MaterialApp(
             title: 'STRK',
             debugShowCheckedModeBanner: false,
+            locale: strkLocale,
+            supportedLocales: strkSupportedLocales,
+            localizationsDelegates: strkLocalizationsDelegates,
             theme: themeProvider.themeData,
             home: StreamBuilder<User?>(
               stream: FirebaseAuth.instance.authStateChanges(),
