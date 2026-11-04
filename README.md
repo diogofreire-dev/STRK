@@ -40,9 +40,9 @@ Opções seguras:
 
 ## CI
 
-Um workflow de exemplo está incluído em `.github/workflows/ci.yml` — corre `flutter analyze` e `flutter test` em pushes/PRs.
+O workflow `.github/workflows/ci.yml` corre `flutter analyze --fatal-infos` e `flutter test` em cada push para `main` e em cada PR.
 
-O workflow agora reconstrói os ficheiros Firebase a partir dos Secrets antes do build.
+Não precisa dos ficheiros Firebase nativos: a análise e os testes só usam o código Dart. Os Secrets `GOOGLE_SERVICES_JSON` e `GOOGLE_SERVICE_INFO_PLIST` só serão necessários quando o CI passar a compilar a app (devem ser guardados em base64).
 
 ## Segurança e boas práticas
 

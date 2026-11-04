@@ -9,14 +9,14 @@ jobs:
   analyze:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Recreate Firebase config files from Secrets
-        run: |
-          echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > android/app/google-services.json
-          echo "${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}" | base64 --decode > ios/Runner/GoogleService-Info.plist
+      - uses: actions/checkout@v5
+      # Não precisamos do google-services.json nem do GoogleService-Info.plist:
+      # o analyze e os testes só usam o código Dart (lib/firebase_options.dart).
+      # Esses ficheiros só fazem falta para compilar a app Android/iOS.
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          cache: true
       - run: flutter pub get
-      - run: flutter analyze
+      - run: flutter analyze --fatal-infos
       - run: flutter test --no-pub
