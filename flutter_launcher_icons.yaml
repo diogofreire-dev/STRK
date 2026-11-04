@@ -1,0 +1,21 @@
+# Gera os ícones da app a partir dos PNG em design/icon/ (renderizados no
+# Blender a partir de design/mascote.blend). Para voltar a gerar:
+#   dart run flutter_launcher_icons
+flutter_launcher_icons:
+  image_path: "design/icon/icon.png"
+  android: "ic_launcher"
+  # Ícone adaptativo: o sistema recorta-o em círculo, gota, quadrado…
+  # A chama fica dentro da zona segura (66% do centro).
+  adaptive_icon_foreground: "design/icon/icon_foreground.png"
+  adaptive_icon_background: "design/icon/icon_background.png"
+  ios: true
+  # O iOS recusa ícones com transparência.
+  remove_alpha_ios: true
+  web:
+    generate: true
+    image_path: "design/icon/icon.png"
+    background_color: "#0D0D0D"
+    theme_color: "#FF6B00"
+  macos:
+    generate: true
+    image_path: "design/icon/icon.png"
