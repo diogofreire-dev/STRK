@@ -29,7 +29,7 @@ class BirthdayBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Text('🥳', style: TextStyle(fontSize: 24)),
+          const Icon(Icons.cake_rounded, size: 26, color: Color(0xFFBF5AF2)),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -44,7 +44,7 @@ class BirthdayBanner extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'Que os teus hábitos te levem longe este ano 🔥',
+                  'Que os teus hábitos te levem longe este ano.',
                   style: TextStyle(
                     fontSize: 12,
                     color: theme.textPrimary.withValues(alpha: 0.6),

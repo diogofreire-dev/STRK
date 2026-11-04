@@ -233,7 +233,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     });
     if (habit.completedToday) {
       final milestone = streakMilestone(habit.name, habit.streak);
-      if (milestone != null) _showToast(milestone);
+      if (milestone != null) {
+        _showToast(milestone, icon: Icons.local_fire_department_rounded);
+      }
     }
     HabitService.saveHabit(habit);
     HabitService.saveDailyLog(
@@ -266,7 +268,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           Positioned.fill(
             child: ConfettiOverlay(
               trigger: _confettiTrigger,
-              // A cor do tema mais umas quentes, para combinar com a 🔥.
+              // A cor do tema mais umas quentes, para combinar com a chama.
               colors: [
                 theme.accent,
                 const Color(0xFFFFD60A),
@@ -483,9 +485,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   String _getGreeting(String name) {
     final h = DateTime.now().hour;
-    if (h < 12) return 'Bom dia, $name 👋';
-    if (h < 19) return 'Boa tarde, $name 👋';
-    return 'Boa noite, $name 🌙';
+    if (h < 12) return 'Bom dia, $name';
+    if (h < 19) return 'Boa tarde, $name';
+    return 'Boa noite, $name';
   }
 
   // ── Progress card ─────────────────────────────────────────────────────────
@@ -677,18 +679,31 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         });
   }
 
-  void _showToast(String message) {
+  void _showToast(String message, {IconData? icon}) {
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
-      ..showSnackBar(_snackBar(message));
+      ..showSnackBar(_snackBar(message, icon: icon));
   }
 
-  SnackBar _snackBar(String message, {SnackBarAction? action}) {
+  SnackBar _snackBar(String message, {SnackBarAction? action, IconData? icon}) {
     final theme = ThemeProviderScope.of(context);
     return SnackBar(
-      content: Text(
-        message,
-        style: TextStyle(color: theme.textPrimary, fontWeight: FontWeight.w600),
+      content: Row(
+        children: [
+          if (icon != null) ...[
+            Icon(icon, color: theme.accent, size: 20),
+            const SizedBox(width: 10),
+          ],
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                color: theme.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
       action: action,
       behavior: SnackBarBehavior.floating,

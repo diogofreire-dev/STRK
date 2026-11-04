@@ -230,7 +230,7 @@ class _HabitCardState extends State<HabitCard>
   }
 }
 
-/// "🔥 12 dias seguidos", com o número a deslizar quando muda.
+/// Chama + "12 dias seguidos", com o número a deslizar quando muda.
 class _StreakLine extends StatelessWidget {
   final int streak;
   final bool done;
@@ -252,13 +252,14 @@ class _StreakLine extends StatelessWidget {
         if (streak > 0) ...[
           ScaleTransition(
             scale: pop,
-            // Sem estar feito hoje, a chama fica "apagada" (meio transparente).
-            child: Opacity(
-              opacity: done ? 1 : 0.4,
-              child: const Text('🔥', style: TextStyle(fontSize: 11)),
+            // Sem estar feito hoje, a chama fica "apagada" (cinzenta).
+            child: Icon(
+              Icons.local_fire_department_rounded,
+              size: 13,
+              color: done ? theme.accent : muted,
             ),
           ),
-          const SizedBox(width: 3),
+          const SizedBox(width: 2),
         ],
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),
@@ -270,7 +271,7 @@ class _StreakLine extends StatelessWidget {
             child: FadeTransition(opacity: anim, child: child),
           ),
           child: Text(
-            streak == 1 ? '1 dia' : '$streak dias',
+            dias(streak),
             key: ValueKey(streak),
             style: TextStyle(
               fontSize: 11,

@@ -105,13 +105,24 @@ class StatsScreen extends StatelessWidget {
                   color: Colors.white.withValues(alpha: 0.16),
                   borderRadius: BorderRadius.circular(999),
                 ),
-                child: const Text(
-                  '✨ foco',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.auto_awesome_rounded,
+                      size: 12,
+                      color: Colors.white,
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      'foco',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -386,7 +397,7 @@ class StatsScreen extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          '${habit.streak} dias',
+                          dias(habit.streak),
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -455,7 +466,7 @@ class StatsScreen extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    habit.completedToday ? 'Feito ✓' : 'Por fazer',
+                    habit.completedToday ? 'Feito' : 'Por fazer',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,

@@ -482,7 +482,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       _dividerV(theme),
       _statItem('Taxa', '$rate%', theme),
       _dividerV(theme),
-      _statItem('Streak atual', '${_selectedHabit?.streak ?? 0} dias', theme),
+      _statItem('Streak atual', dias(_selectedHabit?.streak ?? 0), theme),
     ], theme);
   }
 
