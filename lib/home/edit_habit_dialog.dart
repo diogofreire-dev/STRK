@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../habit.dart';
 import '../habit_service.dart';
+import '../notification_permission.dart';
 import '../theme_provider.dart';
 
 /// Diálogo de edição de um hábito (nome + lembrete diário).
@@ -77,7 +78,12 @@ void showEditHabitDialog({
                 children: [
                   Switch(
                     value: reminderEnabled,
-                    onChanged: (v) => setStateDialog(() => reminderEnabled = v),
+                    onChanged: (v) async {
+                      if (v && !await ensureNotificationPermission(ctx)) {
+                        return;
+                      }
+                      setStateDialog(() => reminderEnabled = v);
+                    },
                     activeThumbColor: theme.accent,
                   ),
                   const SizedBox(width: 8),
