@@ -7,7 +7,7 @@ void main() {
     final provider = ThemeProvider();
     provider.applyPersistenceMap({
       'mode': StrkThemeMode.custom.index,
-      'accent': const Color(0xFFBF5AF2).value,
+      'accent': const Color(0xFFBF5AF2).toARGB32(),
       'customBg': CustomBgMode.light.index,
     });
 

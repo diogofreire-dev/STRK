@@ -68,70 +68,145 @@ void main() {
     });
   });
 
-  group('HabitService.applyDailyReset', () {
-    test('resets streak to 0 for habits not completed yesterday', () {
-      final habits = [
-        Habit(
-          id: '1',
-          name: 'Beber água',
-          icon: Icons.water_drop_outlined,
-          streak: 10,
-          completedToday: false,
-        ),
-      ];
+  group('Habit.toggleCompletion com datas', () {
+    final now = DateTime(2026, 3, 10, 21);
 
-      HabitService.applyDailyReset(habits);
-
-      expect(habits.first.streak, 0);
-      expect(habits.first.completedToday, isFalse);
+    test('marcar guarda hoje como última conclusão', () {
+      final habit = _habit(streak: 2, lastCompletedDate: '2026-03-09');
+      habit.toggleCompletion(now: now);
+      expect(habit.lastCompletedDate, '2026-03-10');
+      expect(habit.streak, 3);
     });
 
-    test('preserves streak for habits completed yesterday but resets '
-        'completedToday for the new day', () {
-      final habits = [
-        Habit(
-          id: '1',
-          name: 'Beber água',
-          icon: Icons.water_drop_outlined,
-          streak: 10,
+    test('desmarcar com streak restante volta a ontem', () {
+      final habit = _habit(
+        streak: 3,
+        completedToday: true,
+        lastCompletedDate: '2026-03-10',
+      );
+      habit.toggleCompletion(now: now);
+      expect(habit.lastCompletedDate, '2026-03-09');
+      expect(habit.streak, 2);
+    });
+
+    test('desmarcar o primeiro dia limpa a data e não fica negativo', () {
+      final habit = _habit(
+        streak: 1,
+        completedToday: true,
+        lastCompletedDate: '2026-03-10',
+      );
+      habit.toggleCompletion(now: now);
+      expect(habit.lastCompletedDate, isNull);
+      expect(habit.streak, 0);
+    });
+  });
+
+  group('Habit.refreshForDay', () {
+    final now = DateTime(2026, 3, 10, 9);
+
+    test('concluído hoje continua feito e mantém o streak', () {
+      final habit = _habit(streak: 4, lastCompletedDate: '2026-03-10');
+      habit.refreshForDay(now);
+      expect(habit.completedToday, isTrue);
+      expect(habit.streak, 4);
+    });
+
+    test('concluído ontem: ainda não feito hoje, mas o streak continua', () {
+      final habit = _habit(
+        streak: 4,
+        completedToday: true,
+        lastCompletedDate: '2026-03-09',
+      );
+      habit.refreshForDay(now);
+      expect(habit.completedToday, isFalse);
+      expect(habit.streak, 4);
+    });
+
+    test('falhou um dia inteiro: o streak quebra', () {
+      final habit = _habit(
+        streak: 12,
+        completedToday: true,
+        lastCompletedDate: '2026-03-08',
+      );
+      habit.refreshForDay(now);
+      expect(habit.completedToday, isFalse);
+      expect(habit.streak, 0);
+    });
+
+    test('nunca concluído fica a zero', () {
+      final habit = _habit(streak: 0);
+      habit.refreshForDay(now);
+      expect(habit.streak, 0);
+      expect(habit.completedToday, isFalse);
+    });
+
+    test('ontem atravessa a mudança de ano', () {
+      final habit = _habit(streak: 30, lastCompletedDate: '2025-12-31');
+      habit.refreshForDay(DateTime(2026, 1, 1, 8));
+      expect(habit.streak, 30);
+    });
+
+    test('ontem atravessa a mudança para a hora de verão', () {
+      // Em Portugal, 2026-03-29 tem só 23 horas.
+      final habit = _habit(streak: 5, lastCompletedDate: '2026-03-29');
+      habit.refreshForDay(DateTime(2026, 3, 30, 0, 30));
+      expect(habit.streak, 5);
+    });
+  });
+
+  group('HabitService.legacyLastCompletedDate', () {
+    test('feito no dia da última abertura', () {
+      expect(
+        HabitService.legacyLastCompletedDate(
           completedToday: true,
+          streak: 3,
+          lastOpenDate: '2026-03-10',
         ),
-      ];
-
-      HabitService.applyDailyReset(habits);
-
-      expect(habits.first.streak, 10);
-      expect(habits.first.completedToday, isFalse);
+        '2026-03-10',
+      );
     });
 
-    test('handles a mix of completed and uncompleted habits independently', () {
-      final habits = [
-        Habit(
-          id: '1',
-          name: 'Concluído',
-          icon: Icons.water_drop_outlined,
-          streak: 8,
-          completedToday: true,
-        ),
-        Habit(
-          id: '2',
-          name: 'Não concluído',
-          icon: Icons.fitness_center_outlined,
-          streak: 8,
+    test('não feito mas com streak: a sequência acabava na véspera', () {
+      expect(
+        HabitService.legacyLastCompletedDate(
           completedToday: false,
+          streak: 3,
+          lastOpenDate: '2026-03-01',
         ),
-      ];
-
-      HabitService.applyDailyReset(habits);
-
-      expect(habits[0].streak, 8);
-      expect(habits[1].streak, 0);
-      expect(habits.every((h) => !h.completedToday), isTrue);
+        '2026-02-28',
+      );
     });
 
-    test('does nothing on an empty list', () {
-      final habits = <Habit>[];
-      expect(() => HabitService.applyDailyReset(habits), returnsNormally);
+    test('sem streak ou sem data, não há última conclusão', () {
+      expect(
+        HabitService.legacyLastCompletedDate(
+          completedToday: false,
+          streak: 0,
+          lastOpenDate: '2026-03-10',
+        ),
+        isNull,
+      );
+      expect(
+        HabitService.legacyLastCompletedDate(
+          completedToday: true,
+          streak: 2,
+          lastOpenDate: '',
+        ),
+        isNull,
+      );
     });
   });
 }
+
+Habit _habit({
+  int streak = 0,
+  bool completedToday = false,
+  String? lastCompletedDate,
+}) => Habit(
+  id: '1',
+  name: 'Beber água',
+  icon: Icons.water_drop_outlined,
+  streak: streak,
+  completedToday: completedToday,
+  lastCompletedDate: lastCompletedDate,
+);

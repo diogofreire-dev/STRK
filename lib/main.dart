@@ -40,11 +40,13 @@ void main() async {
   // Em debug usamos os "debug providers" (precisam de um token registado na
   // consola); em release usamos os providers reais de cada plataforma.
   await FirebaseAppCheck.instance.activate(
-    androidProvider: kDebugMode
-        ? AndroidProvider.debug
-        : AndroidProvider.playIntegrity,
-    appleProvider: kDebugMode ? AppleProvider.debug : AppleProvider.appAttest,
-    webProvider: ReCaptchaV3Provider(kAppCheckWebRecaptchaSiteKey),
+    providerAndroid: kDebugMode
+        ? const AndroidDebugProvider()
+        : const AndroidPlayIntegrityProvider(),
+    providerApple: kDebugMode
+        ? const AppleDebugProvider()
+        : const AppleAppAttestProvider(),
+    providerWeb: ReCaptchaV3Provider(kAppCheckWebRecaptchaSiteKey),
   );
 
   if (!kIsWeb) {
@@ -124,16 +126,18 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int _currentTab = 0;
   List<Habit> habits = [];
   User? _user;
   bool _onboardingShown = false;
+  String? _currentDay;
   late final StreamSubscription<User?> _userSubscription;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _user = FirebaseAuth.instance.currentUser;
     _userSubscription = FirebaseAuth.instance.userChanges().listen((user) {
       if (!mounted) return;
@@ -144,50 +148,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _userSubscription.cancel();
     super.dispose();
   }
 
   Future<void> _loadHabits() async {
-    final loaded = await HabitService.loadHabits();
     await HabitService.loadUserProfile();
     final lastDate = await HabitService.getLastOpenDate();
+    final loaded = await HabitService.loadHabits(lastOpenDate: lastDate);
     final today = HabitService.todayString();
-    final shouldReset = lastDate != today;
 
+    if (!mounted) return;
     setState(() {
-      habits = loaded.isEmpty
-          ? [
-              Habit(
-                id: '1',
-                name: 'Beber água',
-                icon: Icons.water_drop_outlined,
-                streak: 12,
-              ),
-              Habit(
-                id: '2',
-                name: 'Exercício',
-                icon: Icons.fitness_center_outlined,
-                streak: 7,
-              ),
-              Habit(
-                id: '3',
-                name: 'Leitura',
-                icon: Icons.menu_book_outlined,
-                streak: 3,
-              ),
-              Habit(
-                id: '4',
-                name: 'Meditação',
-                icon: Icons.self_improvement_outlined,
-                streak: 1,
-              ),
-            ]
-          : loaded;
-
-      if (shouldReset) {
-        HabitService.applyDailyReset(habits);
-      }
+      habits = loaded;
+      _refreshDay();
     });
 
     for (final habit in habits) {
@@ -217,8 +192,31 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  /// Recalcula o "feito hoje" e os streaks quebrados de todos os hábitos.
+  /// Chamado ao carregar e sempre que a app volta ao primeiro plano, porque
+  /// pode ter ficado aberta de um dia para o outro.
+  void _refreshDay() {
+    final now = DateTime.now();
+    for (final h in habits) {
+      h.refreshForDay(now);
+    }
+    _currentDay = dateKey(now);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    if (_currentDay == null || _currentDay == HabitService.todayString()) {
+      return;
+    }
+    setState(_refreshDay);
+    HabitService.saveAllHabits(habits);
+  }
+
   void toggleHabit(Habit habit) {
     setState(() {
+      // Se passou da meia-noite com a app aberta, primeiro fecha o dia antigo.
+      if (_currentDay != HabitService.todayString()) _refreshDay();
       habit.toggleCompletion();
     });
     HabitService.saveHabit(habit);
