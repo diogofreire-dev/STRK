@@ -1,41 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'habit.dart';
+import 'habit_icons.dart';
 
 class HabitService {
   static final _db = FirebaseFirestore.instance;
 
   // Cached birthday for birthday banner (loaded on app start via loadUserProfile)
   static DateTime? cachedBirthday;
-
-  static final Map<String, IconData> _iconMap = {
-    'water': Icons.water_drop_outlined,
-    'fitness': Icons.fitness_center_outlined,
-    'book': Icons.menu_book_outlined,
-    'meditation': Icons.self_improvement_outlined,
-    'sleep': Icons.bedtime_outlined,
-    'food': Icons.restaurant_outlined,
-    'code': Icons.code_outlined,
-    'music': Icons.music_note_outlined,
-    'run': Icons.directions_run_outlined,
-    'heart': Icons.favorite_outline_rounded,
-    'idea': Icons.lightbulb_outline_rounded,
-    'star': Icons.star_outline_rounded,
-  };
-
-  static String _iconToKey(IconData icon) {
-    return _iconMap.entries
-        .firstWhere(
-          (e) => e.value == icon,
-          orElse: () => const MapEntry('star', Icons.star_outline_rounded),
-        )
-        .key;
-  }
-
-  static IconData _keyToIcon(String key) {
-    return _iconMap[key] ?? Icons.star_outline_rounded;
-  }
 
   static String get _uid => FirebaseAuth.instance.currentUser!.uid;
 
@@ -47,7 +19,7 @@ class HabitService {
   static Map<String, dynamic> _toMap(Habit habit) => {
     'id': habit.id,
     'name': habit.name,
-    'icon': _iconToKey(habit.icon),
+    'icon': iconToKey(habit.icon),
     'completedToday': habit.completedToday,
     'streak': habit.streak,
     'lastCompletedDate': habit.lastCompletedDate,
@@ -88,7 +60,7 @@ class HabitService {
       return Habit(
         id: data['id'],
         name: data['name'],
-        icon: _keyToIcon(data['icon']),
+        icon: keyToIcon(data['icon']),
         completedToday: completedToday,
         streak: streak,
         lastCompletedDate: data.containsKey('lastCompletedDate')

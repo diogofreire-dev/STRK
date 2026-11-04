@@ -18,6 +18,9 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
+      # O firebase_options.dart é gerado pelo FlutterFire CLI e fica de fora.
+      - name: Verificar formatação
+        run: dart format --output=none --set-exit-if-changed $(git ls-files '*.dart' | grep -v firebase_options.dart)
       - run: flutter analyze --fatal-infos
       - run: flutter test --no-pub
 

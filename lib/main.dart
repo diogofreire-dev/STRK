@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -26,6 +27,7 @@ import 'home/birthday_banner.dart';
 import 'home/tab_bar.dart';
 import 'home/onboarding_dialog.dart';
 import 'home/edit_habit_dialog.dart';
+import 'home/celebrations.dart';
 
 // Chave do site reCAPTCHA v3 para o App Check na versão Web.
 // Obtém-se em: Firebase Console > Build > App Check > Apps > STRK (Web) > reCAPTCHA v3
@@ -133,6 +135,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   User? _user;
   bool _onboardingShown = false;
   String? _currentDay;
+  int _confettiTrigger = 0;
   late final StreamSubscription<User?> _userSubscription;
 
   @override
@@ -203,11 +206,21 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   void toggleHabit(Habit habit) {
+    final wasPerfect = habits.isNotEmpty && completedCount == habits.length;
     setState(() {
       // Se passou da meia-noite com a app aberta, primeiro fecha o dia antigo.
       if (_currentDay != HabitService.todayString()) _refreshDay();
       habit.toggleCompletion();
+      // Último hábito do dia concluído → confettis.
+      if (!wasPerfect && completedCount == habits.length) {
+        _confettiTrigger++;
+        HapticFeedback.heavyImpact();
+      }
     });
+    if (habit.completedToday) {
+      final milestone = streakMilestone(habit.name, habit.streak);
+      if (milestone != null) _showToast(milestone);
+    }
     HabitService.saveHabit(habit);
     HabitService.saveDailyLog(
       habit.id,
@@ -233,7 +246,24 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
     return Scaffold(
       backgroundColor: theme.bg,
-      body: _buildTabContent(theme),
+      body: Stack(
+        children: [
+          _buildTabContent(theme),
+          Positioned.fill(
+            child: ConfettiOverlay(
+              trigger: _confettiTrigger,
+              // A cor do tema mais umas quentes, para combinar com a 🔥.
+              colors: [
+                theme.accent,
+                const Color(0xFFFFD60A),
+                const Color(0xFFFF375F),
+                const Color(0xFF30D158),
+                const Color(0xFF64D2FF),
+              ],
+            ),
+          ),
+        ],
+      ),
       floatingActionButton: _currentTab == 0
           ? FloatingActionButton(
               backgroundColor: theme.accent,
@@ -583,11 +613,63 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ReminderService.sync(habits);
         },
       ),
-      onDismissed: () {
-        HabitService.deleteHabit(habit.id);
-        setState(() => habits.remove(habit));
-        ReminderService.sync(habits);
-      },
+      onDismissed: () => _deleteWithUndo(habit),
+    );
+  }
+
+  /// Apagar um hábito apaga também o histórico todo, por isso não o fazemos
+  /// logo: o cartão sai da lista e só é apagado no Firestore quando a barra
+  /// "Desfazer" desaparece sem ter sido usada.
+  void _deleteWithUndo(Habit habit) {
+    final index = habits.indexOf(habit);
+    setState(() => habits.remove(habit));
+    ReminderService.sync(habits);
+
+    var undone = false;
+    final messenger = ScaffoldMessenger.of(context)..clearSnackBars();
+    messenger
+        .showSnackBar(
+          _snackBar(
+            '"${habit.name}" apagado',
+            action: SnackBarAction(
+              label: 'Desfazer',
+              textColor: ThemeProviderScope.of(context).accent,
+              onPressed: () {
+                undone = true;
+                if (!mounted) return;
+                setState(() => habits.insert(index, habit));
+                ReminderService.sync(habits);
+              },
+            ),
+          ),
+        )
+        .closed
+        .then((_) {
+          // Se entretanto a sessão terminou, não há a quem apagar o hábito
+          // (fica, o que é o lado seguro do erro).
+          if (undone || FirebaseAuth.instance.currentUser == null) return;
+          HabitService.deleteHabit(habit.id);
+        });
+  }
+
+  void _showToast(String message) {
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(_snackBar(message));
+  }
+
+  SnackBar _snackBar(String message, {SnackBarAction? action}) {
+    final theme = ThemeProviderScope.of(context);
+    return SnackBar(
+      content: Text(
+        message,
+        style: TextStyle(color: theme.textPrimary, fontWeight: FontWeight.w600),
+      ),
+      action: action,
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: theme.surfaceAlt,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      duration: const Duration(seconds: 4),
     );
   }
 
