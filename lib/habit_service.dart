@@ -61,8 +61,20 @@ class HabitService {
     await _habitsRef.doc(habit.id).set(_toMap(habit));
   }
 
+  /// Apaga o hábito e os seus logs diários. O Firestore não apaga
+  /// subcoleções quando se apaga um documento, por isso os logs têm de ser
+  /// apagados à mão (em batches, que estão limitados a 500 operações).
   static Future<void> deleteHabit(String id) async {
-    await _habitsRef.doc(id).delete();
+    final habitRef = _habitsRef.doc(id);
+    final logs = await habitRef.collection('logs').get();
+    final refs = [...logs.docs.map((d) => d.reference), habitRef];
+    for (var i = 0; i < refs.length; i += 500) {
+      final batch = _db.batch();
+      for (final ref in refs.skip(i).take(500)) {
+        batch.delete(ref);
+      }
+      await batch.commit();
+    }
   }
 
   /// Carrega os hábitos do utilizador. [lastOpenDate] só é usado para

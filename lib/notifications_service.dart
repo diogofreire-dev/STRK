@@ -44,20 +44,6 @@ class NotificationsService {
     } catch (_) {}
   }
 
-  static Future<void> scheduleDailyReminder(
-    String id,
-    int hour,
-    int minute,
-    String title,
-    String body,
-  ) async {
-    if (kIsWeb) return;
-  }
-
-  static Future<void> cancelReminder(String id) async {
-    if (kIsWeb) return;
-  }
-
   static Future<void> removeFcmTokenForCurrentUser() async {
     if (kIsWeb) return;
     final uid = FirebaseAuth.instance.currentUser?.uid;

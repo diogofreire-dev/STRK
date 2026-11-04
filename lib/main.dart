@@ -6,6 +6,7 @@ import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'notifications_service.dart';
+import 'reminder_service.dart';
 import 'firebase_options.dart';
 import 'habit.dart';
 import 'add_habit_screen.dart';
@@ -165,20 +166,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       _refreshDay();
     });
 
-    for (final habit in habits) {
-      if (habit.reminderEnabled &&
-          habit.reminderHour != null &&
-          habit.reminderMinute != null) {
-        await NotificationsService.cancelReminder(habit.id);
-        await NotificationsService.scheduleDailyReminder(
-          habit.id,
-          habit.reminderHour!,
-          habit.reminderMinute!,
-          'Lembra-te de: ${habit.name}',
-          'Não te esqueças do teu hábito diário.',
-        );
-      }
-    }
+    ReminderService.sync(habits);
 
     await HabitService.saveLastOpenDate(today);
     await HabitService.saveAllHabits(habits);
@@ -211,6 +199,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
     setState(_refreshDay);
     HabitService.saveAllHabits(habits);
+    ReminderService.sync(habits);
   }
 
   void toggleHabit(Habit habit) {
@@ -225,6 +214,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       HabitService.todayString(),
       habit.completedToday,
     );
+    // Feito hoje → o lembrete de hoje deixa de fazer sentido (e vice-versa).
+    ReminderService.sync(habits);
   }
 
   int get completedCount => habits.where((h) => h.completedToday).length;
@@ -587,12 +578,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         context: context,
         habit: habit,
         theme: theme,
-        onSaved: () => setState(() {}),
+        onSaved: () {
+          setState(() {});
+          ReminderService.sync(habits);
+        },
       ),
       onDismissed: () {
         HabitService.deleteHabit(habit.id);
-        NotificationsService.cancelReminder(habit.id);
         setState(() => habits.remove(habit));
+        ReminderService.sync(habits);
       },
     );
   }
@@ -607,17 +601,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (newHabit != null) {
       setState(() => habits.add(newHabit));
       HabitService.saveHabit(newHabit);
-      if (newHabit.reminderEnabled &&
-          newHabit.reminderHour != null &&
-          newHabit.reminderMinute != null) {
-        NotificationsService.scheduleDailyReminder(
-          newHabit.id,
-          newHabit.reminderHour!,
-          newHabit.reminderMinute!,
-          'Lembra-te de: ${newHabit.name}',
-          'Não te esqueças do teu hábito diário.',
-        );
-      }
+      ReminderService.sync(habits);
     }
   }
 }

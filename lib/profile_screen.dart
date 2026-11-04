@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
+import 'account_service.dart';
 import 'profile_service.dart';
 import 'badges_screen.dart';
 import 'habit.dart';
@@ -401,6 +402,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         valueColor: const Color(0xFFFF3B30),
                         onTap: () => _confirmLogout(context, theme),
                       ),
+                      _buildTile(
+                        theme: theme,
+                        icon: Icons.person_remove_outlined,
+                        label: 'Eliminar conta',
+                        valueColor: const Color(0xFFFF3B30),
+                        onTap: () => _confirmDeleteAccount(theme),
+                      ),
                     ]),
                     const SizedBox(height: 32),
                     Center(
@@ -786,8 +794,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Expanded(
                     child: GestureDetector(
                       onTap: () async {
-                        Navigator.pop(ctx);
-                        await FirebaseAuth.instance.signOut();
+                        // Fecha também o ecrã de perfil, se foi aberto por
+                        // cima da home, para não ficar visível sem sessão.
+                        Navigator.of(context).popUntil((r) => r.isFirst);
+                        await AccountService.signOut();
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -815,5 +825,147 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ),
     );
+  }
+
+  // ── Delete account ─────────────────────────────────────────────────────────
+
+  Future<void> _confirmDeleteAccount(ThemeProvider theme) async {
+    final passwordController = TextEditingController();
+    final usesPassword = AccountService.usesPassword;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: theme.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.warning_amber_rounded,
+                color: Color(0xFFFF3B30),
+                size: 32,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Eliminar a conta?',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: theme.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Vais perder todos os hábitos, streaks, histórico e a foto de '
+                'perfil. Isto não se pode desfazer.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: theme.textPrimary.withValues(alpha: 0.5),
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (usesPassword)
+                TextField(
+                  controller: passwordController,
+                  obscureText: true,
+                  autofocus: true,
+                  style: TextStyle(color: theme.textPrimary, fontSize: 15),
+                  cursorColor: theme.accent,
+                  decoration: InputDecoration(
+                    hintText: 'Confirma com a tua password',
+                    hintStyle: TextStyle(color: theme.textHint, fontSize: 13),
+                    filled: true,
+                    fillColor: theme.inputFill,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                  ),
+                )
+              else
+                Text(
+                  'Vais ter de confirmar com a tua conta Google.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 12, color: theme.textHint),
+                ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(ctx, false),
+                      child: _dialogBtn(
+                        'Cancelar',
+                        theme.surfaceAlt,
+                        const Color(0xFF888888),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(ctx, true),
+                      child: _dialogBtn(
+                        'Eliminar',
+                        const Color(0xFFFF3B30),
+                        Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    final password = passwordController.text;
+    passwordController.dispose();
+    if (confirmed != true) return;
+    if (usesPassword && password.isEmpty) {
+      _showMessage('Escreve a tua password para confirmar.', isError: true);
+      return;
+    }
+
+    setState(() => _isUploading = true);
+    try {
+      await AccountService.reauthenticate(password: password);
+    } on FirebaseAuthException catch (e) {
+      if (mounted) setState(() => _isUploading = false);
+      _showMessage(
+        e.code == 'wrong-password' || e.code == 'invalid-credential'
+            ? 'Password incorreta.'
+            : 'Não foi possível confirmar a tua identidade.',
+        isError: true,
+      );
+      return;
+    } catch (_) {
+      // Por exemplo, a janela do Google fechada sem escolher conta.
+      if (mounted) setState(() => _isUploading = false);
+      return;
+    }
+
+    if (!mounted) return;
+    final navigator = Navigator.of(context);
+    try {
+      await AccountService.deleteAccount();
+      // Se o perfil foi aberto por cima da home, fecha-o para se ver o login.
+      navigator.popUntil((r) => r.isFirst);
+    } catch (e, stack) {
+      debugPrint('Falha ao eliminar conta: $e\n$stack');
+      if (mounted) setState(() => _isUploading = false);
+      _showMessage(
+        'Não foi possível eliminar a conta. Tenta outra vez.',
+        isError: true,
+      );
+    }
   }
 }
