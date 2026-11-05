@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'account_service.dart';
 import 'profile_service.dart';
 import 'badges_screen.dart';
@@ -277,7 +278,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final totalCount = badges.length;
 
     final bdFormatted = _birthday != null
-        ? '${_birthday!.day.toString().padLeft(2, '0')}/${_birthday!.month.toString().padLeft(2, '0')}/${_birthday!.year}'
+        ? DateFormat("d 'de' MMMM", 'pt_PT').format(_birthday!)
         : null;
 
     return Scaffold(

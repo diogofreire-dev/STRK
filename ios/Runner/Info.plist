@@ -5,7 +5,11 @@
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
-	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<string>pt-PT</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>pt-PT</string>
+	</array>
 	<key>CFBundleDisplayName</key>
 	<string>STRK</string>
 	<key>CFBundleExecutable</key>
@@ -36,7 +40,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Precisamos de acesso à câmera para tirar fotos de perfil.</string>
+	<string>Precisamos de acesso à câmara para tirar fotos de perfil.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Precisamos de acesso à galeria para escolher uma foto de perfil.</string>
 	<key>UIApplicationSceneManifest</key>
