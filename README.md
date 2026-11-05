@@ -29,6 +29,7 @@ Este projecto usa Firebase. IMPORTANT: não comites ficheiros sensíveis no repo
 
 - `android/app/google-services.json`
 - `ios/Runner/GoogleService-Info.plist`
+- `macos/Runner/GoogleService-Info.plist`
 
 Opções seguras:
 
@@ -38,6 +39,23 @@ Opções seguras:
   - `GOOGLE_SERVICES_JSON`
   - `GOOGLE_SERVICE_INFO_PLIST`
 
+### Voltar a gerar a configuração
+
+O identificador da app é `com.strk.habittracker` em todas as plataformas.
+Para voltar a gerar `lib/firebase_options.dart` e os ficheiros nativos:
+
+```bash
+LC_ALL=en_US.UTF-8 flutterfire configure --project=strk-thebestone \
+  --platforms=android,ios,macos,web,windows \
+  --ios-bundle-id=com.strk.habittracker --macos-bundle-id=com.strk.habittracker \
+  --android-package-name=com.strk.habittracker --yes
+```
+
+Depois disso, confirma com `git diff`:
+
+- o `LC_ALL` evita um erro de codificação do Ruby ao ler o `project.pbxproj`;
+- o `flutterfire` acrescenta uma fase "upload-crashlytics-symbols" ao Xcode; remove-a, porque já existe a nossa, que salta os builds de simulador;
+- se o login Google mudar de cliente, atualiza o `CFBundleURLSchemes` em `ios/Runner/Info.plist` e `macos/Runner/Info.plist` com o `REVERSED_CLIENT_ID` do plist novo.
 ## Emuladores (testar sem tocar na produção)
 
 Para experimentar a app com contas e dados falsos, só no teu computador:

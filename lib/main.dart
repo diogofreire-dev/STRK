@@ -29,6 +29,7 @@ import 'home/tab_bar.dart';
 import 'home/onboarding_dialog.dart';
 import 'home/edit_habit_dialog.dart';
 import 'home/celebrations.dart';
+import 'l10n.dart';
 import 'mascot.dart';
 import 'transitions.dart';
 import 'web_frame.dart';
@@ -110,6 +111,9 @@ class StrkApp extends StatelessWidget {
           return MaterialApp(
             title: 'STRK',
             debugShowCheckedModeBanner: false,
+            locale: strkLocale,
+            supportedLocales: strkSupportedLocales,
+            localizationsDelegates: strkLocalizationsDelegates,
             // Coluna centrada em ecrãs largos (web no computador).
             builder: (context, child) => WebFrame(child: child!),
             theme: themeProvider.themeData,

@@ -3,7 +3,11 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
-	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<string>pt-PT</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>pt-PT</string>
+	</array>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIconFile</key>
@@ -23,7 +27,7 @@
 		<dict>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.882100728991-k7m9cc27hpt6g0l670hamsk9dgq2qfbb</string>
+				<string>com.googleusercontent.apps.882100728991-easb3tjgdqkogjji9o9abbdncsf498c1</string>
 			</array>
 		</dict>
 	</array>

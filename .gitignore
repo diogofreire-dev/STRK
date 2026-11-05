@@ -47,6 +47,7 @@ app.*.map.json
 # Firebase config (keep out of repo)
 /android/app/google-services.json
 /ios/Runner/GoogleService-Info.plist
+/macos/Runner/GoogleService-Info.plist
 
 # Secrets and env
 .env
