@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 # Publica a STRK web no Firebase Hosting.
 #
-#   APPCHECK_WEB_KEY=<chave reCAPTCHA v3> ./scripts/deploy_web.sh
+#   APPCHECK_WEB_KEY=<chave do Fraud Defense> ./scripts/deploy_web.sh
 #
-# A chave do reCAPTCHA não é um segredo (fica visível no browser), mas não
+# A chave do Fraud Defense não é um segredo (fica visível no browser), mas não
 # está no repositório: cada deploy tem de a passar.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 if [[ -z "${APPCHECK_WEB_KEY:-}" ]]; then
-  echo "Falta APPCHECK_WEB_KEY (chave reCAPTCHA v3 do App Check)." >&2
+  echo "Falta APPCHECK_WEB_KEY (chave do Fraud Defense, antigo reCAPTCHA Enterprise)." >&2
   exit 1
 fi
 

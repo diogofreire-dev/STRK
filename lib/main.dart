@@ -35,10 +35,12 @@ import 'transitions.dart';
 import 'web_frame.dart';
 import 'tappable.dart';
 
-// Chave do site reCAPTCHA v3 para o App Check na versão web. Não é um
+// Chave do site do Fraud Defense (antigo reCAPTCHA Enterprise) para o App
+// Check na versão web. O reCAPTCHA v3 "clássico" foi descontinuado. Não é um
 // segredo (fica visível no browser), mas cada um põe a sua ao compilar:
 //   flutter build web --dart-define=APPCHECK_WEB_KEY=<chave>
-// Obtém-se em: Firebase Console > App Check > Apps > STRK (Web) > reCAPTCHA v3.
+// Cria-se na Google Cloud (Segurança > reCAPTCHA) e regista-se em
+// Firebase Console > App Check > Apps > STRK (Web) > Fraud Defense.
 const kAppCheckWebRecaptchaSiteKey = String.fromEnvironment('APPCHECK_WEB_KEY');
 
 void main() async {
@@ -62,7 +64,7 @@ void main() async {
       providerApple: kDebugMode
           ? const AppleDebugProvider()
           : const AppleAppAttestProvider(),
-      providerWeb: ReCaptchaV3Provider(kAppCheckWebRecaptchaSiteKey),
+      providerWeb: ReCaptchaEnterpriseProvider(kAppCheckWebRecaptchaSiteKey),
     );
   }
 

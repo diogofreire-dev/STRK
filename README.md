@@ -72,7 +72,7 @@ flutter run -d chrome --dart-define=USE_EMULATORS=true
 
 ## Web
 
-- A chave do App Check na web passa-se ao compilar: `flutter build web --dart-define=APPCHECK_WEB_KEY=<chave reCAPTCHA v3>`. Sem chave, o App Check não é ativado na web.
+- A chave do App Check na web passa-se ao compilar: `flutter build web --dart-define=APPCHECK_WEB_KEY=<chave do Fraud Defense>`. Sem chave, o App Check não é ativado na web.
 - Em ecrãs largos a app fica numa coluna centrada (`lib/web_frame.dart`).
 - Os lembretes não existem na web (o browser não tem notificações locais), por isso o switch fica escondido.
 
@@ -82,7 +82,7 @@ A versão web é publicada no Firebase Hosting do projeto `strk-thebestone`
 (plano gratuito). A configuração está em `firebase.json` (`hosting`).
 
 ```bash
-APPCHECK_WEB_KEY=<chave reCAPTCHA v3> ./scripts/deploy_web.sh
+APPCHECK_WEB_KEY=<chave do Fraud Defense> ./scripts/deploy_web.sh
 ```
 
 O script corre o `analyze` e os testes, compila com
@@ -110,7 +110,7 @@ das fontes, a STRK deve passar a incluir a sua própria fonte nos assets.
 
 ### Antes do primeiro deploy (na consola do Firebase)
 
-1. **App Check → Apps → STRK (Web)**: registar com reCAPTCHA v3 e guardar a chave do site.
+1. **Chave do Fraud Defense** (antigo reCAPTCHA Enterprise; o reCAPTCHA v3 clássico foi descontinuado): em [Google Cloud → Segurança → reCAPTCHA](https://console.cloud.google.com/security/recaptcha?project=strk-thebestone), criar uma chave *Website* sem caixa de verificação, com os domínios `strk.diogofreire.is-a.dev`, `strk-thebestone.web.app`, `strk-thebestone.firebaseapp.com` e `localhost`. Depois, em **App Check → Apps → STRK (Web) → Fraud Defense**, registar essa chave. É gratuito até 10 000 verificações por mês.
 2. **Authentication → Settings → Authorized domains**: acrescentar o domínio final (por exemplo `strk.diogofreire.is-a.dev`).
 3. **Hosting → Add custom domain**: o Firebase indica os registos DNS a pôr no is-a.dev.
 
