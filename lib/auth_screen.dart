@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'theme_provider.dart';
 import 'strk_logo.dart';
+import 'legal_links.dart';
 import 'mascot.dart';
 import 'tappable.dart';
 
@@ -218,6 +219,10 @@ class _AuthScreenState extends State<AuthScreen> {
               _buildGoogleButton(theme),
               const SizedBox(height: 24),
               _buildToggle(theme),
+              if (!_isLogin) ...[
+                const SizedBox(height: 16),
+                _buildLegalNotice(theme),
+              ],
               const SizedBox(height: 40),
             ],
           ),
@@ -437,25 +442,67 @@ class _AuthScreenState extends State<AuthScreen> {
     ),
   );
 
-  Widget _buildToggle(ThemeProvider theme) => Row(
-    mainAxisAlignment: MainAxisAlignment.center,
+  /// Ao registar-se, a pessoa fica a saber o que aceita e onde o pode ler.
+  Widget _buildLegalNotice(ThemeProvider theme) {
+    final muted = TextStyle(
+      color: theme.textSecondary,
+      fontSize: 12,
+      height: 1.5,
+    );
+    final link = muted.copyWith(
+      color: theme.textPrimary,
+      fontWeight: FontWeight.w600,
+      decoration: TextDecoration.underline,
+    );
+    // As ligações têm uma margem invisível à volta: com texto de 12px, a
+    // área de toque ficava pequena demais para um dedo.
+    Widget linkTo(String label, String page) => Tappable(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => openLegalPage(context, page),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 2),
+        child: Text(label, style: link),
+      ),
+    );
+    return Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        Text('Ao criar conta, aceitas os ', style: muted),
+        linkTo('Termos', 'termos.html'),
+        Text(' e a ', style: muted),
+        linkTo('Política de privacidade', 'privacidade.html'),
+        Text('.', style: muted),
+      ],
+    );
+  }
+
+  // Wrap em vez de Row: em ecrãs estreitos ou com texto grande, a frase
+  // muda de linha em vez de transbordar.
+  Widget _buildToggle(ThemeProvider theme) => Wrap(
+    alignment: WrapAlignment.center,
+    crossAxisAlignment: WrapCrossAlignment.center,
     children: [
       Text(
         _isLogin ? 'Não tens conta? ' : 'Já tens conta? ',
         style: TextStyle(color: theme.textSecondary, fontSize: 13),
       ),
       Tappable(
+        behavior: HitTestBehavior.opaque,
         onTap: () => setState(() {
           _isLogin = !_isLogin;
           _error = null;
           _success = null;
         }),
-        child: Text(
-          _isLogin ? 'Regista-te' : 'Inicia sessão',
-          style: TextStyle(
-            color: theme.accent,
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+          child: Text(
+            _isLogin ? 'Regista-te' : 'Inicia sessão',
+            style: TextStyle(
+              color: theme.accent,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ),
