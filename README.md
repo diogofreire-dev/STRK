@@ -76,6 +76,44 @@ flutter run -d chrome --dart-define=USE_EMULATORS=true
 - Em ecrãs largos a app fica numa coluna centrada (`lib/web_frame.dart`).
 - Os lembretes não existem na web (o browser não tem notificações locais), por isso o switch fica escondido.
 
+## Publicar (Firebase Hosting)
+
+A versão web é publicada no Firebase Hosting do projeto `strk-thebestone`
+(plano gratuito). A configuração está em `firebase.json` (`hosting`).
+
+```bash
+APPCHECK_WEB_KEY=<chave reCAPTCHA v3> ./scripts/deploy_web.sh
+```
+
+O script corre o `analyze` e os testes, compila com
+`--no-web-resources-cdn` (o CanvasKit é servido pelo próprio site) e publica.
+
+Para experimentar localmente com os mesmos cabeçalhos da produção:
+
+```bash
+flutter build web --release --no-web-resources-cdn
+firebase emulators:start --only hosting   # http://127.0.0.1:5002
+```
+
+**Cabeçalhos:** `X-Frame-Options`, `nosniff`, `Referrer-Policy`, HSTS,
+`Permissions-Policy` e uma Content Security Policy em modo
+**Report-Only**: o browser avisa na consola quando algo a violaria, mas não
+bloqueia. Depois do primeiro deploy, usa a app (login com email e Google,
+foto de perfil, com App Check ligado) com a consola aberta. Quando não houver
+avisos "violates the following Content Security Policy directive", troca
+`Content-Security-Policy-Report-Only` por `Content-Security-Policy`.
+
+**Fontes:** o Flutter vai buscar a Roboto e a Noto Sans Symbols ao Google
+Fonts, porque o tema usa `SF Pro Display`, que não existe na web. Por isso a
+CSP permite `fonts.gstatic.com`. Para não haver pedidos à Google só por causa
+das fontes, a STRK deve passar a incluir a sua própria fonte nos assets.
+
+### Antes do primeiro deploy (na consola do Firebase)
+
+1. **App Check → Apps → STRK (Web)**: registar com reCAPTCHA v3 e guardar a chave do site.
+2. **Authentication → Settings → Authorized domains**: acrescentar o domínio final (por exemplo `strk.diogofreire.is-a.dev`).
+3. **Hosting → Add custom domain**: o Firebase indica os registos DNS a pôr no is-a.dev.
+
 ## CI
 
 O workflow `.github/workflows/ci.yml` corre `flutter analyze --fatal-infos` e `flutter test` em cada push para `main` e em cada PR.
