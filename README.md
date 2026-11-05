@@ -72,9 +72,47 @@ flutter run -d chrome --dart-define=USE_EMULATORS=true
 
 ## Web
 
-- A chave do App Check na web passa-se ao compilar: `flutter build web --dart-define=APPCHECK_WEB_KEY=<chave reCAPTCHA v3>`. Sem chave, o App Check não é ativado na web.
+- A chave do App Check na web passa-se ao compilar: `flutter build web --dart-define=APPCHECK_WEB_KEY=<chave do Fraud Defense>`. Sem chave, o App Check não é ativado na web.
 - Em ecrãs largos a app fica numa coluna centrada (`lib/web_frame.dart`).
 - Os lembretes não existem na web (o browser não tem notificações locais), por isso o switch fica escondido.
+
+## Publicar (Firebase Hosting)
+
+A versão web é publicada no Firebase Hosting do projeto `strk-thebestone`
+(plano gratuito). A configuração está em `firebase.json` (`hosting`).
+
+```bash
+APPCHECK_WEB_KEY=<chave do Fraud Defense> ./scripts/deploy_web.sh
+```
+
+O script corre o `analyze` e os testes, compila com
+`--no-web-resources-cdn` (o CanvasKit é servido pelo próprio site) e publica.
+
+Para experimentar localmente com os mesmos cabeçalhos da produção:
+
+```bash
+flutter build web --release --no-web-resources-cdn
+firebase emulators:start --only hosting   # http://127.0.0.1:5002
+```
+
+**Cabeçalhos:** `X-Frame-Options`, `nosniff`, `Referrer-Policy`, HSTS,
+`Permissions-Policy` e uma Content Security Policy em modo
+**Report-Only**: o browser avisa na consola quando algo a violaria, mas não
+bloqueia. Depois do primeiro deploy, usa a app (login com email e Google,
+foto de perfil, com App Check ligado) com a consola aberta. Quando não houver
+avisos "violates the following Content Security Policy directive", troca
+`Content-Security-Policy-Report-Only` por `Content-Security-Policy`.
+
+**Fontes:** o Flutter vai buscar a Roboto e a Noto Sans Symbols ao Google
+Fonts, porque o tema usa `SF Pro Display`, que não existe na web. Por isso a
+CSP permite `fonts.gstatic.com`. Para não haver pedidos à Google só por causa
+das fontes, a STRK deve passar a incluir a sua própria fonte nos assets.
+
+### Antes do primeiro deploy (na consola do Firebase)
+
+1. **Chave do Fraud Defense** (antigo reCAPTCHA Enterprise; o reCAPTCHA v3 clássico foi descontinuado): em [Google Cloud → Segurança → reCAPTCHA](https://console.cloud.google.com/security/recaptcha?project=strk-thebestone), criar uma chave *Website* sem caixa de verificação, com os domínios `strk.diogofreire.is-a.dev`, `strk-thebestone.web.app`, `strk-thebestone.firebaseapp.com` e `localhost`. Depois, em **App Check → Apps → STRK (Web) → Fraud Defense**, registar essa chave. É gratuito até 10 000 verificações por mês.
+2. **Authentication → Settings → Authorized domains**: acrescentar o domínio final (por exemplo `strk.diogofreire.is-a.dev`).
+3. **Hosting → Add custom domain**: o Firebase indica os registos DNS a pôr no is-a.dev.
 
 ## CI
 

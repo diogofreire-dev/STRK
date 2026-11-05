@@ -1,1 +1,129 @@
-{"firestore":{"rules":"firestore.rules"},"storage":{"rules":"storage.rules"},"flutter":{"platforms":{"android":{"default":{"projectId":"strk-thebestone","appId":"1:882100728991:android:35d4050e26720a7778deaa","fileOutput":"android/app/google-services.json"}},"ios":{"default":{"projectId":"strk-thebestone","appId":"1:882100728991:ios:a252944273f1ef7678deaa","uploadDebugSymbols":false,"fileOutput":"ios/Runner/GoogleService-Info.plist"}},"macos":{"default":{"projectId":"strk-thebestone","appId":"1:882100728991:ios:a252944273f1ef7678deaa","uploadDebugSymbols":false,"fileOutput":"macos/Runner/GoogleService-Info.plist"}},"dart":{"lib/firebase_options.dart":{"projectId":"strk-thebestone","configurations":{"android":"1:882100728991:android:35d4050e26720a7778deaa","ios":"1:882100728991:ios:a252944273f1ef7678deaa","macos":"1:882100728991:ios:a252944273f1ef7678deaa","web":"1:882100728991:web:22c1f9f18f70ebcc78deaa","windows":"1:882100728991:web:a6ff9befc5c291ef78deaa"}}}}},"emulators":{"auth":{"port":9099},"firestore":{"port":8080},"storage":{"port":9199},"ui":{"enabled":true,"port":4000},"singleProjectMode":true}}
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "strk-thebestone",
+          "appId": "1:882100728991:android:35d4050e26720a7778deaa",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "strk-thebestone",
+          "appId": "1:882100728991:ios:a252944273f1ef7678deaa",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "macos": {
+        "default": {
+          "projectId": "strk-thebestone",
+          "appId": "1:882100728991:ios:a252944273f1ef7678deaa",
+          "uploadDebugSymbols": false,
+          "fileOutput": "macos/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "strk-thebestone",
+          "configurations": {
+            "android": "1:882100728991:android:35d4050e26720a7778deaa",
+            "ios": "1:882100728991:ios:a252944273f1ef7678deaa",
+            "macos": "1:882100728991:ios:a252944273f1ef7678deaa",
+            "web": "1:882100728991:web:22c1f9f18f70ebcc78deaa",
+            "windows": "1:882100728991:web:a6ff9befc5c291ef78deaa"
+          }
+        }
+      }
+    }
+  },
+  "emulators": {
+    "auth": {
+      "port": 9099
+    },
+    "firestore": {
+      "port": 8080
+    },
+    "storage": {
+      "port": 9199
+    },
+    "ui": {
+      "enabled": true,
+      "port": 4000
+    },
+    "singleProjectMode": true,
+    "hosting": {
+      "port": 5002
+    }
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "cleanUrls": false,
+    "headers": [
+      {
+        "source": "**",
+        "headers": [
+          {
+            "key": "Content-Security-Policy-Report-Only",
+            "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://apis.google.com https://accounts.google.com/gsi/client https://www.gstatic.com/firebasejs/; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; img-src 'self' data: blob: https://firebasestorage.googleapis.com https://lh3.googleusercontent.com; font-src 'self' data:; connect-src 'self' https://*.googleapis.com https://firebasestorage.googleapis.com https://*.firebaseio.com https://www.google.com https://accounts.google.com https://fonts.gstatic.com; frame-src https://www.google.com/recaptcha/ https://recaptcha.google.com/ https://accounts.google.com https://strk-thebestone.firebaseapp.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
+          },
+          {
+            "key": "X-Content-Type-Options",
+            "value": "nosniff"
+          },
+          {
+            "key": "X-Frame-Options",
+            "value": "DENY"
+          },
+          {
+            "key": "Referrer-Policy",
+            "value": "strict-origin-when-cross-origin"
+          },
+          {
+            "key": "Strict-Transport-Security",
+            "value": "max-age=31536000; includeSubDomains"
+          },
+          {
+            "key": "Permissions-Policy",
+            "value": "camera=(self), microphone=(), geolocation=(), payment=()"
+          },
+          {
+            "key": "Cross-Origin-Opener-Policy",
+            "value": "same-origin-allow-popups"
+          },
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "**/*.@(png|jpg|svg|ico|otf|ttf|woff2)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=86400"
+          }
+        ]
+      }
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}
