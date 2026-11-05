@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'theme_provider.dart';
 import 'strk_header.dart';
+import 'tappable.dart';
 
 class ThemeSettingsScreen extends StatelessWidget {
   const ThemeSettingsScreen({super.key});
@@ -29,7 +30,7 @@ class ThemeSettingsScreen extends StatelessWidget {
         child: Column(
           children: [
             StrkHeader(
-              leading: GestureDetector(
+              leading: Tappable(
                 onTap: () => Navigator.pop(context),
                 child: Icon(
                   Icons.arrow_back_ios_rounded,
@@ -104,7 +105,7 @@ class ThemeSettingsScreen extends StatelessWidget {
         final (mode, icon, label) = options[i];
         final sel = theme.mode == mode;
         return Expanded(
-          child: GestureDetector(
+          child: Tappable(
             onTap: () => theme.setMode(mode),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
@@ -182,7 +183,7 @@ class ThemeSettingsScreen extends StatelessWidget {
   ) {
     final sel = theme.customBg == bgMode;
     return Expanded(
-      child: GestureDetector(
+      child: Tappable(
         onTap: () => theme.setCustomBg(bgMode),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
@@ -242,7 +243,7 @@ class ThemeSettingsScreen extends StatelessWidget {
       itemBuilder: (_, i) {
         final color = _presets[i];
         final sel = theme.customAccent.toARGB32() == color.toARGB32();
-        return GestureDetector(
+        return Tappable(
           onTap: () => theme.setCustomAccent(color),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),

@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'habit.dart';
 import 'habit_icons.dart';
 import 'notification_permission.dart';
 import 'theme_provider.dart';
 import 'strk_header.dart';
+import 'tappable.dart';
 
 class AddHabitScreen extends StatefulWidget {
   const AddHabitScreen({super.key});
@@ -42,7 +44,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
         child: Column(
           children: [
             StrkHeader(
-              leading: GestureDetector(
+              leading: Tappable(
                 onTap: () => Navigator.pop(context),
                 child: Icon(Icons.close, color: theme.textHint),
               ),
@@ -67,46 +69,52 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                     const SizedBox(height: 10),
                     _buildNameField(theme),
                     const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Switch(
-                          value: _reminderEnabled,
-                          onChanged: (v) async {
-                            // Ligar pede a permissão (com explicação); se a
-                            // pessoa recusar, o switch fica desligado.
-                            if (v &&
-                                !await ensureNotificationPermission(context)) {
-                              return;
-                            }
-                            setState(() => _reminderEnabled = v);
-                          },
-                          activeThumbColor: theme.accent,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Lembrete diário',
-                          style: TextStyle(color: theme.textPrimary),
-                        ),
-                        const Spacer(),
-                        if (_reminderEnabled)
-                          GestureDetector(
-                            onTap: () async {
-                              final t = await showTimePicker(
-                                context: context,
-                                initialTime: _reminderTime,
-                              );
-                              if (t != null) setState(() => _reminderTime = t);
+                    // As notificações locais não existem no browser.
+                    if (!kIsWeb)
+                      Row(
+                        children: [
+                          Switch(
+                            value: _reminderEnabled,
+                            onChanged: (v) async {
+                              // Ligar pede a permissão (com explicação); se a
+                              // pessoa recusar, o switch fica desligado.
+                              if (v &&
+                                  !await ensureNotificationPermission(
+                                    context,
+                                  )) {
+                                return;
+                              }
+                              setState(() => _reminderEnabled = v);
                             },
-                            child: Text(
-                              _reminderTime.format(context),
-                              style: TextStyle(
-                                color: theme.accent,
-                                fontWeight: FontWeight.w600,
+                            activeThumbColor: theme.accent,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Lembrete diário',
+                            style: TextStyle(color: theme.textPrimary),
+                          ),
+                          const Spacer(),
+                          if (_reminderEnabled)
+                            Tappable(
+                              onTap: () async {
+                                final t = await showTimePicker(
+                                  context: context,
+                                  initialTime: _reminderTime,
+                                );
+                                if (t != null) {
+                                  setState(() => _reminderTime = t);
+                                }
+                              },
+                              child: Text(
+                                _reminderTime.format(context),
+                                style: TextStyle(
+                                  color: theme.accent,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
-                          ),
-                      ],
-                    ),
+                        ],
+                      ),
                     const SizedBox(height: 28),
                     _buildLabel('Ícone', theme),
                     const SizedBox(height: 10),
@@ -184,7 +192,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
           button: true,
           selected: isSelected,
           label: item.label,
-          child: GestureDetector(
+          child: Tappable(
             onTap: () => setState(() => _selectedIcon = item.icon),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
@@ -210,7 +218,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
     },
   );
 
-  Widget _buildSaveButton(ThemeProvider theme) => GestureDetector(
+  Widget _buildSaveButton(ThemeProvider theme) => Tappable(
     onTap: _save,
     child: Container(
       width: double.infinity,

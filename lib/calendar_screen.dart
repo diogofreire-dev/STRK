@@ -3,6 +3,7 @@ import 'habit.dart';
 import 'habit_service.dart';
 import 'mascot.dart';
 import 'theme_provider.dart';
+import 'tappable.dart';
 
 class CalendarScreen extends StatefulWidget {
   final List<Habit> habits;
@@ -120,7 +121,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   Widget _chip(Habit? habit, IconData icon, String label, ThemeProvider theme) {
     final selected = habit == null ? _isAll : _selectedHabit?.id == habit.id;
-    return GestureDetector(
+    return Tappable(
       onTap: () {
         setState(() => _selectedHabit = habit);
         _loadLogs();

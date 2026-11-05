@@ -8,6 +8,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'notifications_service.dart';
 import 'reminder_service.dart';
+import 'emulators.dart';
 import 'firebase_options.dart';
 import 'habit.dart';
 import 'add_habit_screen.dart';
@@ -31,29 +32,39 @@ import 'home/celebrations.dart';
 import 'l10n.dart';
 import 'mascot.dart';
 import 'transitions.dart';
+import 'web_frame.dart';
+import 'tappable.dart';
 
-// Chave do site reCAPTCHA v3 para o App Check na versão Web.
-// Obtém-se em: Firebase Console > Build > App Check > Apps > STRK (Web) > reCAPTCHA v3
-// Sem isto preenchido, o App Check na Web não funciona (mas Android/iOS/macOS não precisam disto).
-const String kAppCheckWebRecaptchaSiteKey = 'COLA_AQUI_A_TUA_SITE_KEY';
+// Chave do site reCAPTCHA v3 para o App Check na versão web. Não é um
+// segredo (fica visível no browser), mas cada um põe a sua ao compilar:
+//   flutter build web --dart-define=APPCHECK_WEB_KEY=<chave>
+// Obtém-se em: Firebase Console > App Check > Apps > STRK (Web) > reCAPTCHA v3.
+const kAppCheckWebRecaptchaSiteKey = String.fromEnvironment('APPCHECK_WEB_KEY');
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  if (useEmulators) await connectToEmulators();
 
   // App Check tem de ser ativado logo a seguir ao Firebase.initializeApp(),
   // antes de qualquer outro serviço (Auth, Firestore, Storage, Messaging) ser usado.
   // Em debug usamos os "debug providers" (precisam de um token registado na
   // consola); em release usamos os providers reais de cada plataforma.
-  await FirebaseAppCheck.instance.activate(
-    providerAndroid: kDebugMode
-        ? const AndroidDebugProvider()
-        : const AndroidPlayIntegrityProvider(),
-    providerApple: kDebugMode
-        ? const AppleDebugProvider()
-        : const AppleAppAttestProvider(),
-    providerWeb: ReCaptchaV3Provider(kAppCheckWebRecaptchaSiteKey),
-  );
+  // Na web sem chave (ou com emuladores) não ativamos: o reCAPTCHA com uma
+  // chave inválida só enchia a consola de erros.
+  final appCheckOnWeb =
+      kAppCheckWebRecaptchaSiteKey.isNotEmpty && !useEmulators;
+  if (!kIsWeb || appCheckOnWeb) {
+    await FirebaseAppCheck.instance.activate(
+      providerAndroid: kDebugMode
+          ? const AndroidDebugProvider()
+          : const AndroidPlayIntegrityProvider(),
+      providerApple: kDebugMode
+          ? const AppleDebugProvider()
+          : const AppleAppAttestProvider(),
+      providerWeb: ReCaptchaV3Provider(kAppCheckWebRecaptchaSiteKey),
+    );
+  }
 
   if (!kIsWeb) {
     await GoogleSignIn.instance.initialize();
@@ -103,6 +114,8 @@ class StrkApp extends StatelessWidget {
             locale: strkLocale,
             supportedLocales: strkSupportedLocales,
             localizationsDelegates: strkLocalizationsDelegates,
+            // Coluna centrada em ecrãs largos (web no computador).
+            builder: (context, child) => WebFrame(child: child!),
             theme: themeProvider.themeData,
             home: StreamBuilder<User?>(
               stream: FirebaseAuth.instance.authStateChanges(),
@@ -406,7 +419,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   // ── Home header ───────────────────────────────────────────────────────────
 
   Widget _buildHomeHeader(ThemeProvider theme) {
-    final name = _user?.displayName?.split(' ').first ?? 'STRK';
+    final name = _firstName;
     final photoUrl = _user?.photoURL;
 
     return Column(
@@ -414,7 +427,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       children: [
         StrkHeader(
           subtitle: _getGreeting(name),
-          trailing: _buildAvatar(photoUrl, name, theme, radius: 24),
+          trailing: _buildAvatar(
+            photoUrl,
+            name ?? _user?.email ?? 'S',
+            theme,
+            radius: 24,
+          ),
         ),
         const SizedBox(height: 12),
         Padding(
@@ -435,18 +453,23 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Widget _buildPageHeader(String title, ThemeProvider theme) {
-    final name = _user?.displayName?.split(' ').first ?? 'strk';
+    final name = _firstName;
     final photoUrl = _user?.photoURL;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         StrkHeader(
-          trailing: GestureDetector(
+          trailing: Tappable(
             // O perfil já é um separador: ir para lá em vez de o abrir
             // por cima (ficava duplicado na pilha de navegação).
             onTap: () => setState(() => _currentTab = 3),
-            child: _buildAvatar(photoUrl, name, theme, radius: 18),
+            child: _buildAvatar(
+              photoUrl,
+              name ?? _user?.email ?? 'S',
+              theme,
+              radius: 18,
+            ),
           ),
         ),
         Padding(
@@ -471,7 +494,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     ThemeProvider theme, {
     double radius = 22,
   }) {
-    return GestureDetector(
+    return Tappable(
       onTap: () => setState(() => _currentTab = 3),
       child: CircleAvatar(
         radius: radius,
@@ -493,11 +516,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
 
-  String _getGreeting(String name) {
+  /// Primeiro nome, ou null para quem se registou por email sem nome
+  /// (antes aparecia "Boa noite, STRK", como se a app fosse a pessoa).
+  String? get _firstName {
+    final first = _user?.displayName?.trim().split(' ').first;
+    return (first == null || first.isEmpty) ? null : first;
+  }
+
+  String _getGreeting(String? name) {
     final h = DateTime.now().hour;
-    if (h < 12) return 'Bom dia, $name';
-    if (h < 19) return 'Boa tarde, $name';
-    return 'Boa noite, $name';
+    final base = h < 12 ? 'Bom dia' : (h < 19 ? 'Boa tarde' : 'Boa noite');
+    return name == null ? base : '$base, $name';
   }
 
   // ── Progress card ─────────────────────────────────────────────────────────
@@ -592,7 +621,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     letterSpacing: 0.8,
                   ),
                 ),
-                GestureDetector(
+                Tappable(
                   onTap: _addHabit,
                   child: Text(
                     '+ Novo',

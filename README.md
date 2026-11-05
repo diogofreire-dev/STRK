@@ -56,6 +56,25 @@ Depois disso, confirma com `git diff`:
 - o `LC_ALL` evita um erro de codificação do Ruby ao ler o `project.pbxproj`;
 - o `flutterfire` acrescenta uma fase "upload-crashlytics-symbols" ao Xcode; remove-a, porque já existe a nossa, que salta os builds de simulador;
 - se o login Google mudar de cliente, atualiza o `CFBundleURLSchemes` em `ios/Runner/Info.plist` e `macos/Runner/Info.plist` com o `REVERSED_CLIENT_ID` do plist novo.
+## Emuladores (testar sem tocar na produção)
+
+Para experimentar a app com contas e dados falsos, só no teu computador:
+
+```bash
+firebase emulators:start --only auth,firestore,storage --project strk-thebestone
+flutter run -d chrome --dart-define=USE_EMULATORS=true
+```
+
+- As regras do Firestore e do Storage usadas são as do repositório.
+- A interface dos emuladores fica em http://localhost:4000.
+- Conta de teste usada nos testes manuais (só existe enquanto os emuladores correm; cria-a no ecrã de registo): `teste@strk.test` / `StrkEmulador-2026`.
+- Limitação conhecida: na web, com os emuladores, a sessão não sobrevive a um F5. Em produção isto tem de ser verificado à parte.
+
+## Web
+
+- A chave do App Check na web passa-se ao compilar: `flutter build web --dart-define=APPCHECK_WEB_KEY=<chave reCAPTCHA v3>`. Sem chave, o App Check não é ativado na web.
+- Em ecrãs largos a app fica numa coluna centrada (`lib/web_frame.dart`).
+- Os lembretes não existem na web (o browser não tem notificações locais), por isso o switch fica escondido.
 
 ## CI
 

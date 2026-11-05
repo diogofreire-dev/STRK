@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme_provider.dart';
+import '../tappable.dart';
 
 /// Barra de navegação inferior com os 4 separadores do ecrã principal
 /// (Hoje, Calendário, Stats, Perfil). Um traço na cor do tema desliza até
@@ -88,7 +89,7 @@ class StrkTabBar extends StatelessWidget {
       label: label,
       excludeSemantics: true,
       onTap: () => onTabSelected(index),
-      child: GestureDetector(
+      child: Tappable(
         behavior: HitTestBehavior.opaque,
         onTap: () {
           if (active) return;

@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../habit.dart';
 import '../habit_service.dart';
 import '../notification_permission.dart';
 import '../theme_provider.dart';
+import '../tappable.dart';
 
 /// Diálogo de edição de um hábito (nome + lembrete diário).
 /// Extraído de `main.dart` (era `_HomeScreenState._showEditDialog` e
@@ -74,45 +76,47 @@ void showEditHabitDialog({
                 ),
               ),
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  Switch(
-                    value: reminderEnabled,
-                    onChanged: (v) async {
-                      if (v && !await ensureNotificationPermission(ctx)) {
-                        return;
-                      }
-                      setStateDialog(() => reminderEnabled = v);
-                    },
-                    activeThumbColor: theme.accent,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Lembrete diário',
-                    style: TextStyle(color: theme.textPrimary),
-                  ),
-                  const Spacer(),
-                  if (reminderEnabled)
-                    GestureDetector(
-                      onTap: () async {
-                        final t = await showTimePicker(
-                          context: ctx,
-                          initialTime: reminderTime,
-                        );
-                        if (t != null) setStateDialog(() => reminderTime = t);
+              // As notificações locais não existem no browser.
+              if (!kIsWeb)
+                Row(
+                  children: [
+                    Switch(
+                      value: reminderEnabled,
+                      onChanged: (v) async {
+                        if (v && !await ensureNotificationPermission(ctx)) {
+                          return;
+                        }
+                        setStateDialog(() => reminderEnabled = v);
                       },
-                      child: Text(
-                        reminderTime.format(ctx),
-                        style: TextStyle(color: theme.textPrimary),
-                      ),
+                      activeThumbColor: theme.accent,
                     ),
-                ],
-              ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Lembrete diário',
+                      style: TextStyle(color: theme.textPrimary),
+                    ),
+                    const Spacer(),
+                    if (reminderEnabled)
+                      Tappable(
+                        onTap: () async {
+                          final t = await showTimePicker(
+                            context: ctx,
+                            initialTime: reminderTime,
+                          );
+                          if (t != null) setStateDialog(() => reminderTime = t);
+                        },
+                        child: Text(
+                          reminderTime.format(ctx),
+                          style: TextStyle(color: theme.textPrimary),
+                        ),
+                      ),
+                  ],
+                ),
               const SizedBox(height: 20),
               Row(
                 children: [
                   Expanded(
-                    child: GestureDetector(
+                    child: Tappable(
                       onTap: () => Navigator.pop(ctx),
                       child: _dialogBtn(
                         'Cancelar',
@@ -125,7 +129,7 @@ void showEditHabitDialog({
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: GestureDetector(
+                    child: Tappable(
                       onTap: () {
                         if (controller.text.trim().isEmpty) return;
                         habit.name = controller.text.trim();
