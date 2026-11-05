@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'account_service.dart';
+import 'legal_links.dart';
 import 'profile_service.dart';
 import 'badges_screen.dart';
 import 'habit.dart';
@@ -392,6 +393,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             builder: (_) => const ThemeSettingsScreen(),
                           ),
                         ),
+                      ),
+                    ]),
+                    const SizedBox(height: 16),
+                    // ── Sobre ──────────────────────────────────────────────────
+                    _buildSection('Sobre', theme, [
+                      _buildTile(
+                        theme: theme,
+                        icon: Icons.privacy_tip_outlined,
+                        label: 'Política de privacidade',
+                        onTap: () => openLegalPage(context, 'privacidade.html'),
+                      ),
+                      _buildTile(
+                        theme: theme,
+                        icon: Icons.description_outlined,
+                        label: 'Termos de utilização',
+                        onTap: () => openLegalPage(context, 'termos.html'),
                       ),
                     ]),
                     const SizedBox(height: 16),

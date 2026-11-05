@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0D0D0D">
+  <meta name="description" content="Política de privacidade da STRK: que dados guardamos, porquê, onde e como os podes apagar.">
+  <title>Política de privacidade · STRK</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <style>
+    :root { --bg: #0D0D0D; --surface: #1A1A1A; --text: #E8E8E8; --muted: rgba(232,232,232,.62); --accent: #FF6B00; --line: rgba(232,232,232,.08); }
+    @media (prefers-color-scheme: light) {
+      :root { --bg: #F5F5F5; --surface: #FFFFFF; --text: #111111; --muted: rgba(17,17,17,.62); --line: rgba(17,17,17,.08); }
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: var(--bg); color: var(--text); }
+    body { font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    main { max-width: 720px; margin: 0 auto; padding: 48px 20px 80px; }
+    header { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; }
+    header img { width: 64px; height: 64px; }
+    a { color: var(--accent); }
+    h1 { font-size: 34px; line-height: 1.15; letter-spacing: -1px; margin: 0; }
+    .sub { color: var(--muted); margin: 4px 0 0; font-size: 14px; }
+    h2 { font-size: 19px; margin: 36px 0 8px; letter-spacing: -.3px; }
+    p, li { color: var(--muted); }
+    strong { color: var(--text); }
+    ul { padding-left: 20px; }
+    .box { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px 20px; margin: 16px 0; }
+    .box p { margin: 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 12px 0; }
+    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { color: var(--text); font-weight: 600; }
+    td { color: var(--muted); }
+    footer { margin-top: 48px; font-size: 14px; color: var(--muted); }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="assets/assets/mascot/feliz.png" alt="">
+    <div>
+      <h1>Política de privacidade</h1>
+      <p class="sub">Última atualização: 5 de novembro de 2026</p>
+    </div>
+  </header>
+
+  <div class="box">
+    <p><strong>Em resumo:</strong> a STRK guarda só o que precisa para os teus hábitos funcionarem. Não há publicidade, não vendemos dados e não os usamos para te seguir. Podes apagar a tua conta e tudo o que lhe pertence a qualquer momento, dentro da app.</p>
+  </div>
+
+  <h2>Quem é responsável</h2>
+  <p>A STRK é um projeto pessoal de <strong>Diogo Freire</strong>, que é o responsável pelo tratamento dos teus dados. Para qualquer questão sobre privacidade, escreve para <a href="mailto:diogoffreire1@gmail.com">diogoffreire1@gmail.com</a>.</p>
+
+  <h2>Que dados guardamos e porquê</h2>
+  <table>
+    <tr><th>Dados</th><th>Para quê</th></tr>
+    <tr><td>Email e password (ou a tua conta Google)</td><td>Criar a conta e iniciar sessão. A password nunca é guardada por nós em texto: é tratada pelo Firebase Authentication.</td></tr>
+    <tr><td>Nome, foto de perfil e data de aniversário (opcionais)</td><td>Personalizar a app: a saudação, o avatar e a mensagem no dia de anos.</td></tr>
+    <tr><td>Hábitos, ícones, streaks, horas dos lembretes e o histórico diário</td><td>É a própria função da app: mostrar o teu progresso, o calendário e as conquistas.</td></tr>
+    <tr><td>Token de notificações (só nas apps iOS/Android)</td><td>Enviar notificações para o teu dispositivo.</td></tr>
+    <tr><td>Relatórios de erros (só nas apps iOS/Android, via Firebase Crashlytics)</td><td>Saber quando a app falha e corrigir. Incluem o modelo do dispositivo, a versão do sistema e o ponto do código onde o erro aconteceu; não incluem os teus hábitos.</td></tr>
+    <tr><td>Sinais técnicos do dispositivo e do browser (App Check e reCAPTCHA)</td><td>Confirmar que os pedidos vêm da app verdadeira e não de alguém a abusar do serviço.</td></tr>
+  </table>
+  <p>Algumas preferências ficam <strong>só no teu dispositivo</strong> e nunca chegam aos nossos servidores: o tema e a cor escolhidos e se já viste o ecrã de boas-vindas. Na versão web, a sessão fica guardada no armazenamento do browser, o que é necessário para não teres de iniciar sessão a cada visita.</p>
+
+  <h2>Base legal</h2>
+  <ul>
+    <li><strong>Execução do serviço que pedes</strong> (artigo 6.º, n.º 1, alínea b do RGPD): conta, hábitos, histórico e preferências.</li>
+    <li><strong>Interesse legítimo</strong> (alínea f): segurança (App Check) e diagnóstico de erros (Crashlytics).</li>
+  </ul>
+
+  <h2>Onde ficam os dados</h2>
+  <p>Os dados são tratados pela <strong>Google (Firebase)</strong>, que atua como subcontratante. Os hábitos, o histórico, o perfil e as fotos ficam guardados na <strong>União Europeia</strong> (região europe-west1, na Bélgica). Alguns serviços da Google, como a autenticação, os relatórios de erros e as notificações, podem tratar dados fora da UE, nomeadamente nos Estados Unidos, ao abrigo do Quadro de Privacidade de Dados UE-EUA e das cláusulas contratuais-tipo da Google.</p>
+
+  <h2>Quanto tempo os guardamos</h2>
+  <p>Enquanto a tua conta existir. Quando a eliminas na app (Perfil → Eliminar conta), apagamos de imediato os teus hábitos, o histórico, as fotos, o perfil e a própria conta. A Google pode manter cópias técnicas durante um período limitado, de acordo com a sua política de retenção, antes de as apagar definitivamente.</p>
+
+  <h2>Os teus direitos</h2>
+  <p>Tens direito a aceder, corrigir, apagar e levar contigo os teus dados, e a opor-te ao tratamento baseado em interesse legítimo. Podes apagar tudo diretamente na app; para os outros pedidos, escreve para <a href="mailto:diogoffreire1@gmail.com">diogoffreire1@gmail.com</a> e respondemos no prazo de um mês. Se achares que os teus dados não estão a ser bem tratados, podes apresentar reclamação à <a href="https://www.cnpd.pt" rel="noopener">Comissão Nacional de Proteção de Dados (CNPD)</a>.</p>
+
+  <h2>Idade mínima</h2>
+  <p>A STRK destina-se a pessoas com <strong>13 anos ou mais</strong>, a idade a partir da qual, em Portugal, se pode consentir sozinho o uso de serviços online.</p>
+
+  <h2>O que não fazemos</h2>
+  <ul>
+    <li>Não mostramos publicidade.</li>
+    <li>Não vendemos nem partilhamos os teus dados com terceiros para marketing.</li>
+    <li>Não usamos ferramentas de análise para seguir o que fazes na app.</li>
+  </ul>
+
+  <h2>Alterações</h2>
+  <p>Se esta política mudar, atualizamos a data no topo desta página. Se a mudança for importante, avisamos na app.</p>
+
+  <footer>
+    <a href="termos.html">Termos de utilização</a> · <a href="./">Abrir a STRK</a>
+  </footer>
+</main>
+</body>
+</html>
