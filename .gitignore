@@ -68,3 +68,6 @@ rules_test/*-debug.log
 
 # Cópias de segurança automáticas do Blender
 *.blend1
+
+# Cache do firebase deploy
+.firebase/
